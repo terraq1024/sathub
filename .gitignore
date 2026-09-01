@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+.venv-titiler/
+venv/
+
+# Tooling caches
+.pip-cache/
+.uv-cache/
+.agents/
+
+# Django/runtime
+*.sqlite3
+media/
+staticfiles/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Local data stores (runtime data, never commit)
+data/
+duckdb/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# TypeScript build info
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts

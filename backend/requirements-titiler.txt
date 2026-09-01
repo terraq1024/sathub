@@ -1,0 +1,4 @@
+titiler-core==2.2.1
+titiler.mosaic[mosaicjson]==2.2.1
+cogeo-mosaic==9.2.0
+uvicorn>=0.30,<1.0
