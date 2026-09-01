@@ -22,7 +22,6 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  ApiOutlined,
   ArrowDownOutlined,
   ArrowUpOutlined,
   DeleteOutlined,
@@ -39,13 +38,10 @@ import {
   unwrapList,
   useArchiveDataset,
   useCreateDataset,
-  useCreateService,
   useDataset,
   useDatasets,
   useOrderDatasetMembers,
-  usePublishService,
   useRemoveDatasetMember,
-  useServices,
   useUpdateDataset,
   useUpdateDatasetMember,
   useRefreshDataset
@@ -79,10 +75,9 @@ interface DatasetDetailProps {
   datasetId?: string;
   onClose: () => void;
   currentUser?: User;
-  onPublish: (dataset: ImageryDataset) => void;
 }
 
-function DatasetDetail({ datasetId, onClose, currentUser, onPublish }: DatasetDetailProps) {
+function DatasetDetail({ datasetId, onClose, currentUser }: DatasetDetailProps) {
   const screens = Grid.useBreakpoint();
   const { message, modal } = App.useApp();
   const [editing, setEditing] = useState(false);
@@ -95,7 +90,6 @@ function DatasetDetail({ datasetId, onClose, currentUser, onPublish }: DatasetDe
   const removeMember = useRemoveDatasetMember();
   const updateMember = useUpdateDatasetMember();
   const orderMembers = useOrderDatasetMembers();
-  const servicesQuery = useServices(Boolean(datasetId));
   const dataset = datasetQuery.data;
   const members = useMemo(
     () => [...(dataset?.members ?? [])].sort((left, right) => left.position - right.position),
@@ -103,7 +97,6 @@ function DatasetDetail({ datasetId, onClose, currentUser, onPublish }: DatasetDe
   );
   const bounds = useMemo(() => dataset ? datasetBounds(dataset, members) : undefined, [dataset, members]);
   const manageable = dataset ? datasetCanManage(dataset, currentUser) : false;
-  const datasetService = servicesQuery.data?.find((service) => service.dataset_id === dataset?.id);
 
   useEffect(() => {
     setEditing(false);
@@ -208,7 +201,6 @@ function DatasetDetail({ datasetId, onClose, currentUser, onPublish }: DatasetDe
               <Descriptions.Item label="成员">{dataset.member_count ?? dataset.imagery_count ?? members.length}</Descriptions.Item>
               <Descriptions.Item label="修订">v{dataset.revision}</Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={dataset.status === 'active' ? 'success' : 'default'}>{dataset.status === 'active' ? '有效' : '已归档'}</Tag></Descriptions.Item>
-            <Descriptions.Item label="服务">{datasetService?.needs_update ? <StatusTag status="warning" label="有更新" /> : datasetService ? <StatusTag status={datasetService.status} /> : '-'}</Descriptions.Item>
               <Descriptions.Item label="类型">{dataset.membership_type === 'query' ? '动态' : '静态'}</Descriptions.Item>
               <Descriptions.Item label="刷新模式">{dataset.refresh_mode === 'on_ingestion' ? '入库自动刷新' : '手动刷新'}</Descriptions.Item>
               <Descriptions.Item label="上次刷新">{dataset.last_refreshed_at ? dayjs(dataset.last_refreshed_at).format('YYYY-MM-DD HH:mm') : '-'}</Descriptions.Item>
@@ -275,7 +267,6 @@ function DatasetDetail({ datasetId, onClose, currentUser, onPublish }: DatasetDe
           </div>
           {manageable ? (
             <Space wrap>
-              <Button type="primary" icon={<ApiOutlined />} disabled={!members.some((member) => member.enabled)} onClick={() => onPublish(dataset)}>发布服务</Button>
               <Button danger icon={<DeleteOutlined />} onClick={archive}>归档数据集</Button>
             </Space>
           ) : null}
@@ -304,32 +295,10 @@ export function DatasetsPanel({ currentUser }: { currentUser?: User }) {
   const [params, setParams] = useState({ page: 1, page_size: 20, q: '' });
   const [detailId, setDetailId] = useState<string>();
   const [createOpen, setCreateOpen] = useState(false);
-  const [publishTarget, setPublishTarget] = useState<ImageryDataset>();
   const [createForm] = Form.useForm();
-  const [publishForm] = Form.useForm();
   const datasetsQuery = useDatasets(params);
-  const servicesQuery = useServices();
   const createDataset = useCreateDataset();
-  const createService = useCreateService();
-  const publishService = usePublishService();
   const datasets = unwrapList(datasetsQuery.data);
-
-  const publish = async () => {
-    if (!publishTarget) return;
-    try {
-      const values = await publishForm.validateFields();
-      const service = await createService.mutateAsync({
-        dataset_id: publishTarget.id,
-        name: values.name,
-        visibility: values.visibility
-      });
-      await publishService.mutateAsync(service.service_key);
-      message.success('数据集服务发布任务已创建');
-      setPublishTarget(undefined);
-    } catch (error) {
-      if (error instanceof Error) message.error(normalizeError(error));
-    }
-  };
 
   const columns: ColumnsType<ImageryDataset> = [
     { title: '数据集名称', dataIndex: 'name', minWidth: 220, ellipsis: true },
@@ -344,15 +313,8 @@ export function DatasetsPanel({ currentUser }: { currentUser?: User }) {
     },
     { title: '创建人', width: 100, render: (_, record) => typeof record.created_by === 'object' ? record.created_by.username : record.created_by_username ?? record.created_by ?? '-' },
     { title: '修订', dataIndex: 'revision', width: 72, render: (value) => `v${value}` },
-    {
-      title: '服务', width: 100,
-      render: (_, record) => {
-        const service = servicesQuery.data?.find((item) => item.dataset_id === record.id);
-        return service?.needs_update ? <StatusTag status="warning" label="有更新" /> : service ? <StatusTag status={service.status} /> : '-';
-      }
-    },
     { title: '更新时间', dataIndex: 'updated_at', width: 150, render: (value) => dayjs(value).format('YYYY-MM-DD HH:mm') },
-    { title: '操作', width: 130, render: (_, record) => <Space size={0}><Button type="link" onClick={() => setDetailId(record.id)}>查看</Button><Button type="link" icon={<ApiOutlined />} onClick={() => { setPublishTarget(record); publishForm.setFieldsValue({ name: `${record.name} 服务`, visibility: 'authenticated' }); }}>发布</Button></Space> }
+    { title: '操作', width: 80, render: (_, record) => <Space size={0}><Button type="link" onClick={() => setDetailId(record.id)}>查看</Button></Space> }
   ];
 
   return (
@@ -382,7 +344,7 @@ export function DatasetsPanel({ currentUser }: { currentUser?: User }) {
           onChange: (page, pageSize) => setParams((current) => ({ ...current, page, page_size: pageSize }))
         }}
       />
-      <DatasetDetail datasetId={detailId} onClose={() => setDetailId(undefined)} currentUser={currentUser} onPublish={(dataset) => { setPublishTarget(dataset); publishForm.setFieldsValue({ name: `${dataset.name} 服务`, visibility: 'authenticated' }); }} />
+      <DatasetDetail datasetId={detailId} onClose={() => setDetailId(undefined)} currentUser={currentUser} />
       <Modal
         title="新建数据集"
         open={createOpen}
@@ -405,20 +367,6 @@ export function DatasetsPanel({ currentUser }: { currentUser?: User }) {
           <Form.Item name="description" label="备注"><Input.TextArea rows={3} maxLength={1000} showCount /></Form.Item>
           <Form.Item name="membership_type" label="成员类型" initialValue="static"><Select options={[{ value: 'static', label: '静态成员' }, { value: 'query', label: '动态筛选' }]} /></Form.Item>
           <Form.Item noStyle shouldUpdate={(prev, next) => prev.membership_type !== next.membership_type}>{({ getFieldValue }) => getFieldValue('membership_type') === 'query' ? <><Form.Item name="query_definition" label="筛选定义（JSON）" rules={[{ required: true, message: '请输入筛选定义' }, { validator: async (_, value) => { if (value) validateQueryDefinition(value); } }]}><Input.TextArea rows={4} placeholder='{"q":"AS05"}' /></Form.Item><Form.Item name="refresh_mode" label="刷新模式" initialValue="manual"><Select options={[{ value: 'manual', label: '手动刷新' }, { value: 'on_ingestion', label: '入库自动刷新' }]} /></Form.Item></> : null}</Form.Item>
-        </Form>
-      </Modal>
-      <Modal
-        title="发布数据集服务"
-        open={Boolean(publishTarget)}
-        onCancel={() => { setPublishTarget(undefined); publishForm.resetFields(); }}
-        onOk={() => void publish()}
-        confirmLoading={createService.isPending || publishService.isPending}
-      >
-        <Form form={publishForm} layout="vertical" requiredMark={false}>
-          <Form.Item name="name" label="服务名称" rules={[{ required: true, message: '请输入服务名称' }]}><Input /></Form.Item>
-          <Form.Item name="visibility" label="访问范围" initialValue="authenticated">
-            <Select options={[{ value: 'authenticated', label: '登录用户' }, { value: 'public', label: '公开' }]} />
-          </Form.Item>
         </Form>
       </Modal>
     </div>

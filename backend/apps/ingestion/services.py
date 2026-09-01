@@ -653,24 +653,11 @@ def _index_group_item(item: IngestionItem, group):
             asset_hrefs = {}
             asset_paths = {}
             for role, source, target in _asset_specs(group, Path(item.raw_path), destination, generated_preview):
-                endpoint_id = (item.job.source_payload or {}).get("storage_endpoint_id") if item.job.source_type == IngestionJob.SOURCE_STORAGE_REFERENCE else None
-                endpoint = StorageEndpoint.objects.filter(pk=endpoint_id).first() if endpoint_id and StorageEndpoint is not None else None
-                referenced_object = None
-                if (not endpoint or endpoint.mode == StorageEndpoint.MODE_REFERENCE) and source != generated_preview:
-                    try:
-                        referenced_object = _reference_object_for_path(item.job, source)
-                    except ValueError:
-                        # Platform-derived assets (generated previews) live in
-                        # staging and are never registered storage objects.
-                        referenced_object = None
-                if referenced_object:
-                    stored_path = source.resolve()
-                    access_mode = ImageryAsset.ACCESS_REFERENCE
-                else:
-                    stored_path = _copy_asset(source, target)
-                    access_mode = ImageryAsset.ACCESS_MANAGED
+                # The OSS edition has no storage manager: every asset is copied
+                # into the managed imagery directory.
+                stored_path = _copy_asset(source, target)
                 checksum = hashlib.sha256(stored_path.read_bytes()).hexdigest() if stored_path.stat().st_size < 64 * 1024 * 1024 else ""
-                ImageryAsset.objects.create(imagery=record, role=role, name=source.name, path=str(stored_path), storage_object=referenced_object, access_mode=access_mode, media_type=_media_type(role, source), size_bytes=stored_path.stat().st_size, checksum_sha256=checksum)
+                ImageryAsset.objects.create(imagery=record, role=role, name=source.name, path=str(stored_path), access_mode=ImageryAsset.ACCESS_MANAGED, media_type=_media_type(role, source), size_bytes=stored_path.stat().st_size, checksum_sha256=checksum)
                 asset_hrefs[role] = f"/api/imagery/{image_id}/assets/{role}"
                 asset_paths[role] = str(stored_path)
             stac_json = build_stac_item_from_metadata(scene_key=scene_key, image_id=image_id, metadata=metadata, asset_hrefs=asset_hrefs, project_ids=[str(item.job.project_id)] if item.job.project_id else [])

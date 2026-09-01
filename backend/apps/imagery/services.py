@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_asset_path(asset):
-    """Resolve a managed or referenced asset within an explicitly allowed root."""
+    """Resolve a managed asset within the platform data root."""
     try:
         candidate = Path(asset.path)
         if not candidate.is_absolute():
@@ -28,15 +28,10 @@ def resolve_asset_path(asset):
         path = candidate.resolve(strict=True)
     except (OSError, RuntimeError, ValueError) as exc:
         raise ValueError("资产路径无效或文件不存在。") from exc
-    roots = [Path(settings.DATA_DIR).resolve()]
-    if getattr(asset, "access_mode", None) == ImageryAsset.ACCESS_REFERENCE and asset.storage_object_id:
-        from apps.storage_manager.backends import validate_local_root
-
-        roots.append(validate_local_root(asset.storage_object.endpoint.root_uri))
-    if not any(path != root and root in path.parents for root in roots):
-        # Keep pre-v8 manually registered assets readable during migration. New
-        # referenced assets always carry storage_object and are root-checked above.
-        if getattr(asset, "access_mode", None) != ImageryAsset.ACCESS_MANAGED or asset.storage_object_id:
+    root = Path(settings.DATA_DIR).resolve()
+    if not (path != root and root in path.parents):
+        # Keep pre-v8 manually registered assets readable during migration.
+        if getattr(asset, "access_mode", None) != ImageryAsset.ACCESS_MANAGED:
             raise ValueError("资产路径不在允许的存储根目录内。")
     return path
 

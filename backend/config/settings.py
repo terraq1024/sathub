@@ -1,12 +1,13 @@
-﻿from pathlib import Path
+﻿import os
+from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_DIR = BASE_DIR.parent
 
-SECRET_KEY = "dev-only-change-me"
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me")
+DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in {"1", "true", "yes"}
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if host.strip()]
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:5173",
@@ -28,15 +29,7 @@ INSTALLED_APPS = [
     "apps.projects",
     "apps.ingestion",
     "apps.imagery",
-    "apps.publishing",
     "apps.stac_api",
-    "apps.access_control",
-    "apps.delivery",
-    "apps.processing",
-    "apps.storage_manager",
-    "apps.metadata_registry",
-    "apps.catalog_governance",
-    "apps.audit_log",
 ]
 
 MIDDLEWARE = [
@@ -95,20 +88,21 @@ REST_FRAMEWORK = {
     ],
 }
 
-DATA_DIR = ROOT_DIR / "data"
+def _from_env(value: str, default: str) -> Path:
+    path = Path(value) if value else Path(default)
+    return path.resolve() if path.is_absolute() else (ROOT_DIR / path).resolve()
+
+
+DATA_DIR = _from_env(os.environ.get("AIRMAP_DATA_ROOT"), str(ROOT_DIR / "data"))
+DUCKDB_PATH = _from_env(os.environ.get("AIRMAP_DUCKDB_PATH"), str(ROOT_DIR / "duckdb" / "imagery.duckdb"))
 UPLOAD_TEMP_DIR = DATA_DIR / "upload-tmp"
 STAGING_DIR = DATA_DIR / "staging"
 RAW_DIR = DATA_DIR / "raw"
-COG_DIR = DATA_DIR / "cog"
-MOSAIC_DIR = DATA_DIR / "mosaics"
 THUMB_DIR = DATA_DIR / "thumb"
-EXPORTS_DIR = DATA_DIR / "exports"
-PROCESSING_DIR = DATA_DIR / "processing"
 IMAGERY_DIR = DATA_DIR / "imagery"
 STAC_DIR = DATA_DIR / "stac"
-DUCKDB_PATH = ROOT_DIR / "duckdb" / "imagery.duckdb"
 
-for path in [STAGING_DIR, UPLOAD_TEMP_DIR, RAW_DIR, COG_DIR, MOSAIC_DIR, THUMB_DIR, EXPORTS_DIR, PROCESSING_DIR, IMAGERY_DIR, STAC_DIR, DUCKDB_PATH.parent]:
+for path in [STAGING_DIR, UPLOAD_TEMP_DIR, RAW_DIR, THUMB_DIR, IMAGERY_DIR, STAC_DIR, DUCKDB_PATH.parent]:
     path.mkdir(parents=True, exist_ok=True)
 
 # Keep Django's multipart upload spool on the data disk. The system drive may
@@ -120,13 +114,10 @@ MAX_EXTRACTED_BYTES = 16 * 1024 * 1024 * 1024
 MAX_EXTRACTED_FILES = 100000
 URL_DOWNLOAD_TIMEOUT = 120
 IMAGERY_DATASET_MAX_MEMBERS = 200
-DELIVERY_MAX_ITEMS = 200
-ACCESS_MAX_RANGE_BYTES = 64 * 1024 * 1024
-PROCESSING_TIMEOUT_SECONDS = 60 * 60
-STORAGE_ALLOWED_ROOTS = []
 DERIVED_PREVIEW_DIR = DATA_DIR / "derived-previews"
 
-TITILER_BASE_URL = "http://127.0.0.1:8081"
-PUBLIC_SERVICE_BASE_URL = "http://127.0.0.1:8000"
+# Optional: an isolated Python runtime with rasterio, used only to warp
+# rotated rasters into north-up previews. When absent, previews fall back to
+# the tifffile/PIL path and rotated scenes are previewed unwarped.
 TITILER_PYTHON = ROOT_DIR / ".venv-titiler" / "Scripts" / "python.exe"
 

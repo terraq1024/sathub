@@ -6,12 +6,8 @@ import {
   Card,
   Checkbox,
   Empty,
-  Form,
-  Input,
-  Modal,
   Pagination,
   Segmented,
-  Select,
   Space,
   Spin,
   Table,
@@ -19,15 +15,13 @@ import {
   Typography
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { ApiOutlined, AppstoreOutlined, EyeOutlined, ScissorOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, EyeOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
   getListCount,
   unwrapList,
-  useCreateService,
   useImageryFacets,
-  useImagery,
-  usePublishService
+  useImagery
 } from '../../api/hooks';
 import type { Imagery, ImagerySearchParams, Project, User } from '../../api/types';
 import { ImageryFilters, filtersToParams, type ImageryFilterValues } from './ImageryFilters';
@@ -35,7 +29,6 @@ import { ImageryThumbnail } from './ImageryThumbnail';
 import { ImageryDetailDrawer } from './ImageryDetailDrawer';
 import { SelectionActions } from './SelectionActions';
 import { imageryName, normalizeError } from './utils';
-import { ProcessingDrawer } from '../processing/ProcessingDrawer';
 import { SectionBar, StatusTag } from '../../components/VisualPrimitives';
 
 type CatalogView = 'list' | 'grid';
@@ -47,19 +40,13 @@ interface ImageryCatalogProps {
 }
 
 export function ImageryCatalog({ projects, projectLoading, currentUser }: ImageryCatalogProps) {
-  const { message } = App.useApp();
   const [filters, setFilters] = useState<ImageryFilterValues>({});
   const [params, setParams] = useState<ImagerySearchParams>({ page: 1, page_size: 20 });
   const [view, setView] = useState<CatalogView>('list');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detailId, setDetailId] = useState<string>();
-  const [processingImagery, setProcessingImagery] = useState<Imagery>();
-  const [publishId, setPublishId] = useState<string>();
-  const [publishForm] = Form.useForm();
   const imageryQuery = useImagery(params);
   const facetsQuery = useImageryFacets();
-  const createService = useCreateService();
-  const publishService = usePublishService();
   const records = unwrapList(imageryQuery.data);
 
   const applyFilters = (values: ImageryFilterValues) => {
@@ -68,40 +55,8 @@ export function ImageryCatalog({ projects, projectLoading, currentUser }: Imager
     setParams({ ...filtersToParams(values), page: 1, page_size: params.page_size ?? 20 });
   };
 
-  const openPublish = (imageId: string) => {
-    const imagery = records.find((record) => record.image_id === imageId);
-    setPublishId(imageId);
-    publishForm.setFieldsValue({
-      name: imagery ? `${imageryName(imagery)} 服务` : '',
-      visibility: 'authenticated'
-    });
-  };
-
-  const submitPublish = async () => {
-    if (!publishId) return;
-    try {
-      const values = await publishForm.validateFields();
-      const service = await createService.mutateAsync({
-        imagery_id: publishId,
-        name: values.name,
-        visibility: values.visibility
-      });
-      await publishService.mutateAsync(service.service_key);
-      message.success('服务发布任务已创建');
-      setPublishId(undefined);
-      publishForm.resetFields();
-    } catch (error) {
-      if (error instanceof Error) message.error(normalizeError(error));
-    }
-  };
-
   const toggleSelected = (imageId: string, checked: boolean) => {
     setSelectedIds((current) => checked ? [...new Set([...current, imageId])] : current.filter((id) => id !== imageId));
-  };
-
-  const openProcessing = (imagery: Imagery) => {
-    setDetailId(undefined);
-    setProcessingImagery(imagery);
   };
 
   const columns: ColumnsType<Imagery> = [
@@ -118,12 +73,10 @@ export function ImageryCatalog({ projects, projectLoading, currentUser }: Imager
       render: (value) => value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'
     },
     {
-      title: '操作', width: 184,
+      title: '操作', width: 90,
       render: (_, record) => (
         <Space size={0}>
           <Button type="link" icon={<EyeOutlined />} onClick={() => setDetailId(record.image_id)}>查看</Button>
-          <Button type="link" icon={<ScissorOutlined />} disabled={record.is_archived} onClick={() => openProcessing(record)}>处理</Button>
-          <Button type="link" icon={<ApiOutlined />} disabled={record.is_archived} onClick={() => openPublish(record.image_id)}>发布</Button>
         </Space>
       )
     }
@@ -223,28 +176,7 @@ export function ImageryCatalog({ projects, projectLoading, currentUser }: Imager
         onClose={() => setDetailId(undefined)}
         projects={projects}
         currentUser={currentUser}
-        onPublish={openPublish}
-        onProcess={openProcessing}
       />
-      <ProcessingDrawer
-        open={Boolean(processingImagery)}
-        imagery={processingImagery}
-        onClose={() => setProcessingImagery(undefined)}
-      />
-      <Modal
-        title="发布单景服务"
-        open={Boolean(publishId)}
-        onCancel={() => { setPublishId(undefined); publishForm.resetFields(); }}
-        onOk={() => void submitPublish()}
-        confirmLoading={createService.isPending || publishService.isPending}
-      >
-        <Form form={publishForm} layout="vertical" requiredMark={false}>
-          <Form.Item name="name" label="服务名称" rules={[{ required: true, message: '请输入服务名称' }]}><Input /></Form.Item>
-          <Form.Item name="visibility" label="访问范围" initialValue="authenticated">
-            <Select options={[{ value: 'authenticated', label: '登录用户' }, { value: 'public', label: '公开' }]} />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 }

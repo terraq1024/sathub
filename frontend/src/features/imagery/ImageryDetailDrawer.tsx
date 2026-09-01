@@ -15,7 +15,7 @@ import {
   Tag,
   Typography
 } from 'antd';
-import { ApiOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, RollbackOutlined, SaveOutlined, ScissorOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownloadOutlined, EditOutlined, RollbackOutlined, SaveOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { ImageOverlay, MapContainer } from 'react-leaflet';
 import { api } from '../../api/client';
@@ -35,11 +35,9 @@ interface ImageryDetailDrawerProps {
   onClose: () => void;
   projects: Project[];
   currentUser?: User;
-  onPublish?: (imageId: string) => void;
-  onProcess?: (imagery: Imagery) => void;
 }
 
-export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser, onPublish, onProcess }: ImageryDetailDrawerProps) {
+export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser }: ImageryDetailDrawerProps) {
   const screens = Grid.useBreakpoint();
   const { message, modal } = App.useApp();
   const [view, setView] = useState<'preview' | 'map'>('preview');
@@ -179,8 +177,6 @@ export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser, o
 
           <Space wrap>
             <Button icon={<DownloadOutlined />} href={api.imageryAssetUrl(imagery.image_id, 'data')}>下载</Button>
-            {onProcess && !imagery.is_archived ? <Button icon={<ScissorOutlined />} onClick={() => onProcess(imagery)}>在线处理</Button> : null}
-            {onPublish && !imagery.is_archived ? <Button icon={<ApiOutlined />} onClick={() => onPublish(imagery.image_id)}>发布服务</Button> : null}
             {manageable && !imagery.is_archived ? <Button danger icon={<DeleteOutlined />} onClick={confirmArchive}>归档</Button> : null}
             {manageable && imagery.is_archived ? <Button icon={<RollbackOutlined />} loading={restoreImagery.isPending} onClick={() => void restore()}>恢复</Button> : null}
           </Space>

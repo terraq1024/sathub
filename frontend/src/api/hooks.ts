@@ -2,15 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import type {
   CreateDatasetPayload,
-  CreateImageryServicePayload,
-  CreateProcessingJobPayload,
-  DeliveryExport,
   ImageryBatchPayload,
   ImagerySearchParams,
-  ImageryService,
   IngestionJob,
   ListResponse,
-  ProcessingJob,
   UpdateDatasetPayload,
   UpdateImageryPayload
 } from './types';
@@ -114,26 +109,6 @@ export function useImageryFacets(enabled = true) {
   return useQuery({ queryKey: ['imagery', 'facets'], queryFn: api.imageryFacets, enabled, staleTime: 30_000 });
 }
 
-export function useBasket(enabled = true) { return useQuery({ queryKey: ['delivery', 'basket'], queryFn: api.basket, enabled }); }
-export function useAddBasketItems() { const qc = useQueryClient(); return useMutation({ mutationFn: api.addBasketItems, onSuccess: () => void qc.invalidateQueries({ queryKey: ['delivery', 'basket'] }) }); }
-export function useRemoveBasketItem() { const qc = useQueryClient(); return useMutation({ mutationFn: api.removeBasketItem, onSuccess: () => void qc.invalidateQueries({ queryKey: ['delivery', 'basket'] }) }); }
-export function useClearBasket() { const qc = useQueryClient(); return useMutation({ mutationFn: api.clearBasket, onSuccess: () => void qc.invalidateQueries({ queryKey: ['delivery', 'basket'] }) }); }
-export function useDeliveryExports(enabled = true) {
-  return useQuery({
-    queryKey: ['delivery', 'exports'],
-    queryFn: api.exports,
-    enabled,
-    refetchInterval: (query) => {
-      const jobs = unwrapList(query.state.data as ListResponse<DeliveryExport> | undefined);
-      return jobs.some((job) => ['pending', 'running'].includes(job.status)) ? 3000 : false;
-    }
-  });
-}
-export function useCreateDeliveryExport() { const qc = useQueryClient(); return useMutation({ mutationFn: api.createExport, onSuccess: () => void qc.invalidateQueries({ queryKey: ['delivery', 'exports'] }) }); }
-export function useAccessTokens(enabled = true) { return useQuery({ queryKey: ['access', 'tokens'], queryFn: api.accessTokens, enabled }); }
-export function useCreateAccessToken() { const qc = useQueryClient(); return useMutation({ mutationFn: api.createAccessToken, onSuccess: () => void qc.invalidateQueries({ queryKey: ['access', 'tokens'] }) }); }
-export function useDeleteAccessToken() { const qc = useQueryClient(); return useMutation({ mutationFn: api.deleteAccessToken, onSuccess: () => void qc.invalidateQueries({ queryKey: ['access', 'tokens'] }) }); }
-
 export function useImageryDetail(imageId?: string) {
   return useQuery({
     queryKey: ['imagery', 'detail', imageId],
@@ -189,7 +164,6 @@ export function useDataset(datasetId?: string) {
 
 function invalidateDatasets(queryClient: ReturnType<typeof useQueryClient>, datasetId?: string) {
   void queryClient.invalidateQueries({ queryKey: ['datasets'] });
-  void queryClient.invalidateQueries({ queryKey: ['services'] });
   if (datasetId) void queryClient.invalidateQueries({ queryKey: ['datasets', 'detail', datasetId] });
 }
 
@@ -249,75 +223,5 @@ export function useOrderDatasetMembers() {
     mutationFn: ({ datasetId, imageryIds }: { datasetId: string; imageryIds: string[] }) =>
       api.orderDatasetMembers(datasetId, imageryIds),
     onSuccess: (_, variables) => invalidateDatasets(queryClient, variables.datasetId)
-  });
-}
-
-export function useServices(enabled = true) {
-  return useQuery({
-    queryKey: ['services'],
-    queryFn: api.services,
-    enabled,
-    refetchInterval: (query) => {
-      const services = query.state.data as ImageryService[] | undefined;
-      return services?.some(
-        (service) =>
-          ['validating', 'preparing', 'publishing'].includes(service.status) ||
-          ['pending', 'running'].includes(service.latest_job?.status ?? '')
-      )
-        ? 3000
-        : false;
-    }
-  });
-}
-
-export function useCreateService() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: CreateImageryServicePayload) => api.createService(payload),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['services'] })
-  });
-}
-
-export function usePublishService() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.publishService,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['services'] })
-  });
-}
-
-export function useOfflineService() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.offlineService,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['services'] })
-  });
-}
-
-export function useProcessingJobs(enabled = true) {
-  return useQuery({
-    queryKey: ['processing', 'jobs'],
-    queryFn: api.processingJobs,
-    enabled,
-    refetchInterval: (query) => {
-      const jobs = unwrapList(query.state.data as ListResponse<ProcessingJob> | undefined);
-      return jobs.some((job) => ['pending', 'queued', 'running'].includes(job.status)) ? 2500 : false;
-    }
-  });
-}
-
-export function useCreateProcessingJob() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: CreateProcessingJobPayload) => api.createProcessingJob(payload),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['processing', 'jobs'] })
-  });
-}
-
-export function useRetryProcessingJob() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.retryProcessingJob,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['processing', 'jobs'] })
   });
 }

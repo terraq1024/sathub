@@ -12,71 +12,36 @@ from rest_framework.test import APIClient
 
 from apps.projects.models import Project
 
-from .airsat import parse_source_name
 from .metadata import parse_product_group, scan_product_groups
 from .models import ImageryDataset, ImageryDatasetMember, ImageryProjectTag, ImageryRecord, ImagerySavedSearch
 from .services import refresh_on_ingestion_datasets, sync_imagery_projection
-from .stac import build_stac_item
 
 
 class MetadataParserTests(SimpleTestCase):
-    def test_sample_sar_filename_parses_to_utc(self):
-        parsed = parse_source_name("AS05_AR_TD_003485_E117.1_N31.3_20260406020232_L2_HH_05_001")
+    def test_plain_geotiff_group_resolves_raster_metadata(self):
+        import numpy as np
+        import rasterio
+        from rasterio.transform import from_bounds
 
-        self.assertEqual(parsed.platform, "AS05")
-        self.assertEqual(parsed.mode_code, "AR")
-        self.assertEqual(parsed.direction_code, "TD")
-        self.assertEqual(parsed.scene_id, "003485")
-        self.assertEqual(parsed.center_lon, 117.1)
-        self.assertEqual(parsed.center_lat, 31.3)
-        self.assertEqual(parsed.product_level, "L2")
-        self.assertEqual(parsed.polarization, "HH")
-        self.assertEqual(parsed.acquisition_time.isoformat(), "2026-04-05T18:02:32+00:00")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            scene_dir = root / "demo-scene-001"
+            scene_dir.mkdir()
+            transform = from_bounds(117.0, 31.0, 117.5, 31.5, 32, 32)
+            with rasterio.open(
+                scene_dir / "demo-scene-001.tif", "w",
+                driver="GTiff", width=32, height=32, count=1, dtype="uint8",
+                crs="EPSG:4326", transform=transform,
+            ) as dataset:
+                dataset.write((np.indices((32, 32)).sum(axis=0) % 256).astype("uint8"), 1)
 
-    def test_stac_item_contains_required_minimum_fields(self):
-        parsed = parse_source_name("AS05_AR_TD_003485_E117.1_N31.3_20260406020232_L2_HH_05_001")
-        item = build_stac_item(
-            stac_id=parsed.source_name,
-            project_id="1",
-            raw_path=__file__,
-            parsed=parsed,
-            raster={"spatial_status": "spatial_pending", "metadata_source": "filename"},
-        )
-
-        self.assertEqual(item["type"], "Feature")
-        self.assertEqual(item["stac_version"], "1.0.0")
-        self.assertEqual(item["collection"], "airmap-imagery")
-        self.assertEqual(item["properties"]["datetime"], "2026-04-05T18:02:32Z")
-        self.assertEqual(item["properties"]["platform"], "AS05")
-        self.assertEqual(item["properties"]["sar:polarizations"], ["HH"])
-        self.assertIn("data", item["assets"])
-
-    def test_vendor_stac_and_capella_groups_are_structured(self):
-        vendor_root = Path(__file__).resolve().parents[3]
-        umbra_root = Path(r"D:\code\jiaofu\stac-catalog\umbra-no-land\items")
-        capella_root = Path(r"D:\code\liusu\capelladata")
-        iceye_root = Path(r"D:\工作文件\产品研发\123\CSI")
-        if not all(path.exists() for path in (umbra_root, capella_root, iceye_root)):
-            self.skipTest("Real vendor sample directories are not available")
-
-        umbra = parse_product_group(scan_product_groups(umbra_root)[0])
-        self.assertEqual(umbra["platform_code"], "UMBRA-04")
-        self.assertEqual(umbra["polarization"], "VV")
-        self.assertEqual(umbra["spatial_status"], "ready")
-
-        capella = parse_product_group(scan_product_groups(capella_root)[0])
-        self.assertEqual(capella["platform_code"], "CAPELLA-3")
-        self.assertEqual(capella["imaging_mode_detail"], "SLIDING_SPOTLIGHT")
-        self.assertEqual(capella["polarization"], "HH")
-        self.assertEqual(capella["epsg"], 32610)
-        self.assertEqual(capella["spatial_status"], "ready")
-        self.assertEqual(capella["geometry"]["type"], "Polygon")
-
-        iceye = parse_product_group(scan_product_groups(iceye_root)[0])
-        self.assertEqual(iceye["platform_code"], "ICEYE-X44")
-        self.assertEqual(iceye["product_level"], "CSI-COG")
-        self.assertEqual(iceye["polarization"], "VV")
-        self.assertEqual(iceye["geometry"]["type"], "Polygon")
+            groups = scan_product_groups(root)
+            self.assertEqual(len(groups), 1)
+            values = parse_product_group(groups[0])
+            self.assertEqual(values["source_name"], "demo-scene-001")
+            self.assertEqual(values["spatial_status"], "ready")
+            self.assertEqual(values["bbox"], [117.0, 31.0, 117.5, 31.5])
+            self.assertEqual(values["metadata_status"], "partial")
 
 
 class ImageryApiTestBase(TestCase):

@@ -2,20 +2,17 @@ import json
 import tempfile
 from datetime import datetime, timezone as dt_timezone
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import include, path
 from rest_framework.test import APIClient
 
-from apps.access_control.models import ApiAccessToken
 from apps.imagery.models import ImageryAsset, ImageryRecord
 
 
 urlpatterns = [
     path("api/stac/", include("apps.stac_api.urls")),
-    path("api/access/", include("apps.access_control.urls")),
 ]
 
 
@@ -50,7 +47,6 @@ class StacApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["numberMatched"], 1)
         self.assertIn("/api/imagery/image-1/assets/preview", response.data["features"][0]["assets"]["preview"]["href"])
-        self.assertNotIn("D:/private", response.content.decode())
 
     def test_collection_items_reuses_search_and_deduplicates_fallbacks(self):
         response = self.client.get("/api/stac/collections/airmap-imagery/items", {"datetime": "2024-01-01T00:00:00Z/2024-12-31T23:59:59Z"})
@@ -89,44 +85,6 @@ class StacApiTests(TestCase):
         self.assertEqual(self.client.get("/api/stac/search").data["numberMatched"], 0)
         self.assertEqual(self.client.get("/api/stac/search", {"limit": "0"}).status_code, 400)
         self.assertEqual(self.client.post("/api/stac/search", {"query": {"unknown": {"eq": "x"}}}, format="json").status_code, 400)
-
-    def test_catalog_scope_does_not_return_signed_asset_url(self):
-        _, raw = ApiAccessToken.issue(user=self.user, name="catalog-only", scopes=["catalog/read"])
-        self.client.force_authenticate(None)
-        response = self.client.get(
-            "/api/stac/collections/airmap-imagery/items/scene-1",
-            HTTP_AUTHORIZATION=f"Bearer {raw}",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        href = response.data["assets"]["preview"]["href"]
-        self.assertNotIn("/api/access/signed-assets/", href)
-        self.assertIn("/api/imagery/image-1/assets/preview", href)
-
-    def test_assets_scope_returns_signed_url_with_range_support(self):
-        _, raw = ApiAccessToken.issue(user=self.user, name="full-access", scopes=["catalog/read", "assets/read"])
-        self.client.force_authenticate(None)
-        response = self.client.get(
-            "/api/stac/collections/airmap-imagery/items/scene-1",
-            HTTP_AUTHORIZATION=f"Bearer {raw}",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        parsed = urlparse(response.data["assets"]["preview"]["href"])
-        self.assertIn("/api/access/signed-assets/image-1/preview", parsed.path)
-        query = parse_qs(parsed.query)
-        signed_path = f"{parsed.path}?{parsed.query}"
-
-        asset = self.client.get(signed_path, HTTP_RANGE="bytes=0-6")
-        self.assertEqual(asset.status_code, 206)
-        self.assertEqual(asset.content, b"preview")
-        self.assertEqual(asset["Content-Range"], "bytes 0-6/13")
-
-        head = self.client.head(signed_path, HTTP_RANGE="bytes=0-6")
-        self.assertEqual(head.status_code, 206)
-        self.assertEqual(head.content, b"")
-        self.assertEqual(head["Content-Length"], "7")
-        self.assertIn("signature", query)
 
     def test_catalog_collection_and_authentication(self):
         self.client.force_authenticate(None)

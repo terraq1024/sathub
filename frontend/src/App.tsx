@@ -1,21 +1,17 @@
 import { useState } from 'react';
-import { Avatar, Button, Dropdown, Layout, Menu, Space, Spin } from 'antd';
-import { ApiOutlined, CompassOutlined, DatabaseOutlined, DownOutlined, LogoutOutlined, RadarChartOutlined, SettingOutlined, ShoppingCartOutlined, UserOutlined } from '@ant-design/icons';
+import { Avatar, Dropdown, Layout, Menu, Space, Spin } from 'antd';
+import { CompassOutlined, DatabaseOutlined, DownOutlined, LogoutOutlined, RadarChartOutlined, UserOutlined } from '@ant-design/icons';
 import { useLogout, useMe, useProjects } from './api/hooks';
 import { LoginPage } from './features/auth/LoginPage';
 import { DataPage } from './features/imagery/DataPage';
 import { MapPage } from './features/map/MapPage';
-import { ServicesPage } from './features/services/ServicesPage';
 import { normalizeError } from './features/imagery/utils';
-import { BasketDrawer } from './features/delivery/BasketDrawer';
-import { SystemManagementPage } from './features/system/SystemManagementPage';
 
-type PageKey = 'data' | 'map' | 'services' | 'system';
+type PageKey = 'data' | 'map';
 const { Header, Content } = Layout;
 
 function Workspace() {
   const [page, setPage] = useState<PageKey>('data');
-  const [basketOpen, setBasketOpen] = useState(false);
   const me = useMe();
   const logout = useLogout();
   const projectsQuery = useProjects(Boolean(me.data));
@@ -23,9 +19,7 @@ function Workspace() {
   const isStaff = Boolean(me.data?.is_staff || me.data?.is_superuser);
   const menuItems = [
     { key: 'data', icon: <DatabaseOutlined />, label: '数据管理' },
-    { key: 'map', icon: <CompassOutlined />, label: '地图' },
-    { key: 'services', icon: <ApiOutlined />, label: '服务' },
-    ...(isStaff ? [{ key: 'system', icon: <SettingOutlined />, label: '系统管理' }] : [])
+    { key: 'map', icon: <CompassOutlined />, label: '地图' }
   ];
 
   const userMenuItems = [
@@ -40,7 +34,7 @@ function Workspace() {
             <span className="brand-mark"><RadarChartOutlined /></span>
             <span className="brand-copy">
               <span className="brand-name">Airmap</span>
-              <span className="brand-sub">Ingestion &amp; Imagery Hub</span>
+              <span className="brand-sub">Imagery Hub</span>
             </span>
           </div>
           <nav className="top-nav-divider" aria-hidden />
@@ -54,7 +48,6 @@ function Workspace() {
           />
         </div>
         <Space className="header-actions" size={8}>
-          <Button className="basket-button" icon={<ShoppingCartOutlined />} onClick={() => setBasketOpen(true)}><span className="basket-label">数据篮</span></Button>
           <Dropdown menu={{ items: userMenuItems, onClick: () => logout.mutate() }}>
             <button type="button" className="user-chip" aria-label="账户菜单">
               <Avatar size={26} className="user-avatar" icon={<UserOutlined />} />
@@ -73,10 +66,7 @@ function Workspace() {
         ) : null}
         {page === 'data' ? <DataPage projects={projects} projectLoading={projectsQuery.isLoading} currentUser={me.data} /> : null}
         {page === 'map' ? <MapPage projects={projects} projectLoading={projectsQuery.isLoading} /> : null}
-        {page === 'services' ? <ServicesPage /> : null}
-        {page === 'system' ? <SystemManagementPage /> : null}
       </Content>
-      <BasketDrawer open={basketOpen} onClose={() => setBasketOpen(false)} />
     </Layout>
   );
 }

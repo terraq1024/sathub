@@ -1,0 +1,36 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      DJANGO_SECRET_KEY: change-me-in-production
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: backend,localhost,127.0.0.1
+    volumes:
+      - airmap-data:/app/data
+      - airmap-duckdb:/app/duckdb
+    ports:
+      - "8000:8000"
+
+  backend-worker:
+    build: ./backend
+    command: ["python", "manage.py", "run_ingestion_worker"]
+    environment:
+      DJANGO_SECRET_KEY: change-me-in-production
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: backend,localhost,127.0.0.1
+    volumes:
+      - airmap-data:/app/data
+      - airmap-duckdb:/app/duckdb
+    depends_on:
+      - backend
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  airmap-data:
+  airmap-duckdb:
