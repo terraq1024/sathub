@@ -7,18 +7,25 @@ from rest_framework.views import APIView
 
 from apps.imagery.models import ImageryRecord
 from apps.imagery.stac import STAC_COLLECTION
-from apps.access_control.authentication import BearerTokenAuthentication, has_scope
+
+try:
+    from apps.access_control.authentication import BearerTokenAuthentication, has_scope
+except ImportError:  # OSS edition bundles without token auth
+    BearerTokenAuthentication = None
+
+    def has_scope(*args, **kwargs):
+        return False
 
 from .services import collection, item_for_record, next_search_link, search_records
 
 
 class BaseView(APIView):
-    authentication_classes = [SessionAuthentication, BearerTokenAuthentication]
+    authentication_classes = [SessionAuthentication] + ([BearerTokenAuthentication] if BearerTokenAuthentication else [])
     permission_classes = [IsAuthenticated]
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        if isinstance(request.successful_authenticator, BearerTokenAuthentication) and not has_scope(request.auth, "catalog/read"):
+        if BearerTokenAuthentication is not None and isinstance(request.successful_authenticator, BearerTokenAuthentication) and not has_scope(request.auth, "catalog/read"):
             raise PermissionDenied("Missing catalog/read scope")
 
 

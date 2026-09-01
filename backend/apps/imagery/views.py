@@ -10,7 +10,13 @@ from django.db.models import Prefetch, Q
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from apps.audit_log.services import record_request_event
+
+try:
+    from apps.audit_log.services import record_request_event
+except ImportError:  # OSS edition bundles without the audit app
+    def record_request_event(*args, **kwargs):
+        return None
+
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -55,7 +61,10 @@ def _governance_image_ids(filters):
     governance_keys = ("administrative_unit_id", "classification_id", "tag_id")
     if not any(filters.get(key) for key in governance_keys):
         return None
-    from apps.catalog_governance.services import imagery_ids_for_filters
+    try:
+        from apps.catalog_governance.services import imagery_ids_for_filters
+    except ImportError:  # OSS edition bundles without catalog governance
+        return []
 
     def values(key):
         raw = filters.get(key) or ""

@@ -8,8 +8,13 @@ from django.conf import settings
 from apps.imagery.models import ImageryAsset, ImageryRecord
 from apps.imagery.stac import STAC_COLLECTION, build_stac_item_from_metadata
 from apps.imagery.services import _metadata_from_record
-from apps.access_control.authentication import has_scope
-from apps.access_control.signing import build_signed_path
+
+try:
+    from apps.access_control.authentication import has_scope
+    from apps.access_control.signing import build_signed_path
+except ImportError:  # OSS edition bundles without token auth
+    has_scope = None
+    build_signed_path = None
 
 
 def _iso(value):
@@ -24,7 +29,9 @@ def _asset_href(request, image_id, role):
     # Catalog access must not implicitly grant asset access. Only a token with
     # the explicit assets/read scope receives an anonymous signed URL.
     if (
-        request.auth is not None
+        build_signed_path is not None
+        and has_scope is not None
+        and request.auth is not None
         and request.META.get("HTTP_AUTHORIZATION", "").lower().startswith("bearer ")
         and has_scope(request.auth, "assets/read")
     ):

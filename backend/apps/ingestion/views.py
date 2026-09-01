@@ -6,7 +6,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.projects.services import accessible_projects_for
-from apps.audit_log.services import record_request_event
+
+try:
+    from apps.audit_log.services import record_request_event
+except ImportError:  # OSS edition bundles without the audit app
+    def record_request_event(*args, **kwargs):
+        return None
+
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from .models import IngestionItem, IngestionJob

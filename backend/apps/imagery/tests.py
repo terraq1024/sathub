@@ -12,7 +12,8 @@ from rest_framework.test import APIClient
 
 from apps.projects.models import Project
 
-from .metadata import parse_source_name, parse_product_group, scan_product_groups
+from .airsat import parse_source_name
+from .metadata import parse_product_group, scan_product_groups
 from .models import ImageryDataset, ImageryDatasetMember, ImageryProjectTag, ImageryRecord, ImagerySavedSearch
 from .services import refresh_on_ingestion_datasets, sync_imagery_projection
 from .stac import build_stac_item

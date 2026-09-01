@@ -16,7 +16,13 @@ from django.utils import timezone
 from apps.imagery.duckdb_index import upsert_image
 from apps.imagery.metadata import build_scene_key, is_image_file, parse_product_group, scan_product_groups
 from apps.imagery.models import ImageryAsset, ImageryProjectTag, ImageryRecord
-from apps.storage_manager.models import StorageEndpoint, StorageObject
+
+try:
+    from apps.storage_manager.models import StorageEndpoint, StorageObject
+except ImportError:  # OSS edition bundles without the storage manager app
+    StorageEndpoint = None
+    StorageObject = None
+
 from apps.imagery.services import refresh_on_ingestion_datasets, sync_imagery_projection_safely
 from apps.imagery.stac import build_stac_item_from_metadata
 from apps.projects.models import Project
@@ -548,6 +554,8 @@ def _asset_specs(group, root: Path, destination: Path, generated_preview: Path |
 
 
 def _reference_object_for_path(job, source: Path):
+    if StorageEndpoint is None:
+        return None
     if job.source_type != IngestionJob.SOURCE_STORAGE_REFERENCE:
         return None
     endpoint_id = (job.source_payload or {}).get("storage_endpoint_id")
@@ -646,7 +654,7 @@ def _index_group_item(item: IngestionItem, group):
             asset_paths = {}
             for role, source, target in _asset_specs(group, Path(item.raw_path), destination, generated_preview):
                 endpoint_id = (item.job.source_payload or {}).get("storage_endpoint_id") if item.job.source_type == IngestionJob.SOURCE_STORAGE_REFERENCE else None
-                endpoint = StorageEndpoint.objects.filter(pk=endpoint_id).first() if endpoint_id else None
+                endpoint = StorageEndpoint.objects.filter(pk=endpoint_id).first() if endpoint_id and StorageEndpoint is not None else None
                 referenced_object = None
                 if (not endpoint or endpoint.mode == StorageEndpoint.MODE_REFERENCE) and source != generated_preview:
                     try:
