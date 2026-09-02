@@ -52,7 +52,7 @@ python manage.py runserver 127.0.0.1:8000
 cd frontend && npm ci && npm run dev -- --host 127.0.0.1
 ```
 
-使用演示账号登录（`demo` / `demo1234`），打开地图即可看到三景示例影像与预览图。底图使用天地图时，在 `frontend/.env` 配置自己的 `VITE_TIANDITU_TOKEN`。
+使用演示账号登录（`demo` / `demo1234`），打开地图即可看到三景示例影像与预览图。底图内置天地图（电子/影像）与 Esri World Imagery，可在地图右下角切换。
 
 ## 许可证
 

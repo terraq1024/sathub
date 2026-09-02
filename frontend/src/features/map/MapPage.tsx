@@ -7,7 +7,7 @@ import { GeoJSON, ImageOverlay, MapContainer, Popup } from 'react-leaflet';
 import { api } from '../../api/client';
 import { useImageryDetail, useImageryFacets, useImageryMap } from '../../api/hooks';
 import type { Imagery, ImagerySavedSearch, ImagerySearchParams, Project } from '../../api/types';
-import { FitBounds, RefreshMapSize, TianDiTuLayer, type TianDiTuMapType } from '../imagery/MapPrimitives';
+import { FitBounds, RefreshMapSize, TianDiTuLayer, type BaseMapType } from '../imagery/MapPrimitives';
 import { ImageryFilters, filtersToParams, type ImageryFilterValues } from '../imagery/ImageryFilters';
 import { SelectionActions } from '../imagery/SelectionActions';
 import { imageryBounds, imageryName, normalizeError } from '../imagery/utils';
@@ -121,7 +121,7 @@ function LayerWorkbench({
 export function MapPage({ projects, projectLoading }: { projects: Project[]; projectLoading?: boolean }) {
   const { message: messageApi } = AntdApp.useApp();
   const [filters, setFilters] = useState<ImageryFilterValues>({});
-  const [baseMap, setBaseMap] = useState<TianDiTuMapType>('vec');
+  const [baseMap, setBaseMap] = useState<BaseMapType>('vec');
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveForm] = Form.useForm<{ name: string; description?: string }>();
   const [hasSearched, setHasSearched] = useState(false);
@@ -291,10 +291,10 @@ export function MapPage({ projects, projectLoading }: { projects: Project[]; pro
 
       <div className="map-basemap-switcher" aria-label="底图切换">
         <Typography.Text>底图</Typography.Text>
-        <Select<TianDiTuMapType>
+        <Select<BaseMapType>
           size="small"
           value={baseMap}
-          options={[{ value: 'vec', label: '电子地图' }, { value: 'img', label: '影像地图' }]}
+          options={[{ value: 'vec', label: '电子地图' }, { value: 'img', label: '影像地图' }, { value: 'esri', label: 'Esri 影像' }]}
           onChange={setBaseMap}
         />
       </div>
