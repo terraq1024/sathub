@@ -6,8 +6,8 @@ services:
       DJANGO_DEBUG: "false"
       DJANGO_ALLOWED_HOSTS: backend,localhost,127.0.0.1
     volumes:
-      - airmap-data:/app/data
-      - airmap-duckdb:/app/duckdb
+      - sathub-data:/app/data
+      - sathub-duckdb:/app/duckdb
     ports:
       - "8000:8000"
 
@@ -19,8 +19,8 @@ services:
       DJANGO_DEBUG: "false"
       DJANGO_ALLOWED_HOSTS: backend,localhost,127.0.0.1
     volumes:
-      - airmap-data:/app/data
-      - airmap-duckdb:/app/duckdb
+      - sathub-data:/app/data
+      - sathub-duckdb:/app/duckdb
     depends_on:
       - backend
 
@@ -32,5 +32,5 @@ services:
       - backend
 
 volumes:
-  airmap-data:
-  airmap-duckdb:
+  sathub-data:
+  sathub-duckdb:

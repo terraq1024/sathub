@@ -44,7 +44,7 @@ class Command(BaseCommand):
             user.save(update_fields=["password"])
 
         with tempfile.TemporaryDirectory() as tmp:
-            archive_path = Path(tmp) / "airmap-samples.zip"
+            archive_path = Path(tmp) / "sathub-samples.zip"
             with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as bundle:
                 for scene in scenes:
                     bundle.write(scene, arcname=scene.name)

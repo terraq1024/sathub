@@ -1,8 +1,8 @@
-# Airmap — Imagery Hub
+# SatHub — Imagery Hub
 
 A lightweight, self-hosted hub for satellite imagery: bring your scattered scenes together, catalog them automatically, search them in seconds, and preview them on a map — straight from the browser.
 
-Airmap OSS covers the "data home" part of the imagery workflow:
+SatHub OSS covers the "data home" part of the imagery workflow:
 
 ```
 ingest -> catalog (STAC) -> search -> preview on map -> organize (datasets)

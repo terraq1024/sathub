@@ -33,7 +33,7 @@ function Workspace() {
           <div className="brand">
             <span className="brand-mark"><RadarChartOutlined /></span>
             <span className="brand-copy">
-              <span className="brand-name">Airmap</span>
+              <span className="brand-name">SatHub</span>
               <span className="brand-sub">Imagery Hub</span>
             </span>
           </div>

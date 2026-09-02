@@ -30,7 +30,7 @@ export function LoginPage() {
         <div className="login-brand-top">
           <span className="brand-mark brand-mark-lg"><RadarChartOutlined /></span>
           <div>
-            <Typography.Title level={3} className="login-brand-title">Airmap</Typography.Title>
+            <Typography.Title level={3} className="login-brand-title">SatHub</Typography.Title>
             <Typography.Text className="login-brand-subtitle">卫星影像管理平台</Typography.Text>
           </div>
         </div>

@@ -32,7 +32,7 @@ class BaseView(APIView):
 class RootView(BaseView):
     def get(self, request):
         base = request.build_absolute_uri("/api/stac/")
-        return Response({"stac_version": "1.0.0", "id": "airmap-catalog", "title": "Airmap STAC", "description": "Airmap 影像 STAC API", "conformsTo": ["https://api.stacspec.org/v1.0.0/core", "https://api.stacspec.org/v1.0.0/ogcapi-features-1/1.0.0"], "links": [{"rel": "self", "href": base}, {"rel": "data", "href": base + "collections"}, {"rel": "search", "href": base + "search", "method": "GET"}, {"rel": "search", "href": base + "search", "method": "POST"}]})
+        return Response({"stac_version": "1.0.0", "id": "sathub-catalog", "title": "SatHub STAC", "description": "SatHub 影像 STAC API", "conformsTo": ["https://api.stacspec.org/v1.0.0/core", "https://api.stacspec.org/v1.0.0/ogcapi-features-1/1.0.0"], "links": [{"rel": "self", "href": base}, {"rel": "data", "href": base + "collections"}, {"rel": "search", "href": base + "search", "method": "GET"}, {"rel": "search", "href": base + "search", "method": "POST"}]})
 
 
 class CollectionView(BaseView):

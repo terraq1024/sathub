@@ -82,8 +82,8 @@ def collection(request):
         "type": "Collection",
         "stac_version": "1.0.0",
         "id": STAC_COLLECTION,
-        "title": "Airmap 影像",
-        "description": "Airmap 未归档卫星影像集合",
+        "title": "SatHub 影像",
+        "description": "SatHub 未归档卫星影像集合",
         "license": "proprietary",
         "extent": {"spatial": {"bbox": [[-180, -90, 180, 90]]}, "temporal": {"interval": [[None, None]]}},
         "links": [

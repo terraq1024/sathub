@@ -149,7 +149,7 @@ def _projection_record(imagery, stac_json):
     return {
         "image_id": str(imagery.pk),
         "stac_id": imagery.stac_id,
-        "collection_id": "airmap-imagery",
+        "collection_id": "sathub-imagery",
         "scene_key": imagery.scene_key,
         "project_id": project_ids[0] if project_ids else "",
         "project_ids": "|".join(sorted(project_ids)),

@@ -1,5 +1,5 @@
 /*
- * Airmap 商务浅色主题（FRONTEND_THEME_GUIDE.md）
+ * SatHub 商务浅色主题（FRONTEND_THEME_GUIDE.md）
  * 设计原则：白面板 + 冷蓝主色 + 紧凑密度 + 轻阴影层级。
  */
 
@@ -8,30 +8,30 @@
 }
 
 :root {
-  --airmap-canvas: #f0f3f8;
-  --airmap-surface: #ffffff;
-  --airmap-surface-muted: #f6f8fc;
-  --airmap-border: #dce4f0;
-  --airmap-border-soft: #e8edf5;
-  --airmap-text: #24324a;
-  --airmap-text-strong: #1d2b45;
-  --airmap-text-muted: #5d6b82;
-  --airmap-primary: #3f6ff2;
-  --airmap-primary-deep: #2f5fe0;
-  --airmap-primary-bg: #eef3fe;
-  --airmap-primary-hover: #9eb4ff;
-  --airmap-success: #18a999;
-  --airmap-success-bg: #e9f8f5;
-  --airmap-warning: #d9942f;
-  --airmap-warning-bg: #fdf3e4;
-  --airmap-danger: #d95d5d;
-  --airmap-danger-bg: #fdeeee;
-  --airmap-info-bg: #e9f2fe;
-  --airmap-muted-bg: #f1f4f9;
-  --airmap-shadow-sm: 0 1px 2px rgba(23, 43, 84, 0.04), 0 4px 14px rgba(23, 43, 84, 0.06);
-  --airmap-shadow-md: 0 2px 6px rgba(23, 43, 84, 0.06), 0 12px 32px rgba(23, 43, 84, 0.1);
-  --airmap-radius: 6px;
-  --airmap-radius-lg: 8px;
+  --sathub-canvas: #f0f3f8;
+  --sathub-surface: #ffffff;
+  --sathub-surface-muted: #f6f8fc;
+  --sathub-border: #dce4f0;
+  --sathub-border-soft: #e8edf5;
+  --sathub-text: #24324a;
+  --sathub-text-strong: #1d2b45;
+  --sathub-text-muted: #5d6b82;
+  --sathub-primary: #3f6ff2;
+  --sathub-primary-deep: #2f5fe0;
+  --sathub-primary-bg: #eef3fe;
+  --sathub-primary-hover: #9eb4ff;
+  --sathub-success: #18a999;
+  --sathub-success-bg: #e9f8f5;
+  --sathub-warning: #d9942f;
+  --sathub-warning-bg: #fdf3e4;
+  --sathub-danger: #d95d5d;
+  --sathub-danger-bg: #fdeeee;
+  --sathub-info-bg: #e9f2fe;
+  --sathub-muted-bg: #f1f4f9;
+  --sathub-shadow-sm: 0 1px 2px rgba(23, 43, 84, 0.04), 0 4px 14px rgba(23, 43, 84, 0.06);
+  --sathub-shadow-md: 0 2px 6px rgba(23, 43, 84, 0.06), 0 12px 32px rgba(23, 43, 84, 0.1);
+  --sathub-radius: 6px;
+  --sathub-radius-lg: 8px;
 }
 
 html,
@@ -45,8 +45,8 @@ body,
 
 body {
   overflow: hidden;
-  background: var(--airmap-canvas);
-  color: var(--airmap-text);
+  background: var(--sathub-canvas);
+  color: var(--sathub-text);
   font-feature-settings: "tnum";
 }
 
@@ -66,7 +66,7 @@ body {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: var(--airmap-canvas);
+  background: var(--sathub-canvas);
 }
 
 .login-screen {
@@ -115,8 +115,8 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: var(--airmap-primary-bg);
-  color: var(--airmap-primary);
+  background: var(--sathub-primary-bg);
+  color: var(--sathub-primary);
   font-size: 20px;
 }
 
@@ -225,16 +225,16 @@ body {
   display: grid;
   place-items: center;
   padding: 32px;
-  background: var(--airmap-canvas);
+  background: var(--sathub-canvas);
 }
 
 .login-panel {
   width: min(380px, 100%);
   padding: 34px 32px 28px;
-  border: 1px solid var(--airmap-border-soft);
+  border: 1px solid var(--sathub-border-soft);
   border-radius: 12px;
-  background: var(--airmap-surface);
-  box-shadow: var(--airmap-shadow-md);
+  background: var(--sathub-surface);
+  box-shadow: var(--sathub-shadow-md);
 }
 
 .login-panel-head {
@@ -243,7 +243,7 @@ body {
 
 .login-panel-head .ant-typography-title {
   margin: 0 0 2px;
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 22px;
 }
 
@@ -269,8 +269,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid var(--airmap-border-soft);
-  background: var(--airmap-surface);
+  border-bottom: 1px solid var(--sathub-border-soft);
+  background: var(--sathub-surface);
   box-shadow: 0 1px 3px rgba(23, 43, 84, 0.04);
   z-index: 700;
 }
@@ -298,14 +298,14 @@ body {
 }
 
 .brand-name {
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
 .brand-sub {
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -315,7 +315,7 @@ body {
   flex: 0 0 auto;
   width: 1px;
   height: 24px;
-  background: var(--airmap-border);
+  background: var(--sathub-border);
 }
 
 .top-menu {
@@ -335,7 +335,7 @@ body {
 .top-menu .ant-menu-item {
   margin-inline: 2px;
   padding-inline: 14px;
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 14px;
   font-weight: 500;
   transition: color 160ms ease, background-color 160ms ease;
@@ -346,14 +346,14 @@ body {
 }
 
 .top-menu .ant-menu-item:hover {
-  color: var(--airmap-primary);
-  background: var(--airmap-primary-bg);
+  color: var(--sathub-primary);
+  background: var(--sathub-primary-bg);
   border-radius: 6px !important;
 }
 
 .top-menu .ant-menu-item-selected {
-  color: var(--airmap-primary-deep) !important;
-  background: var(--airmap-primary-bg) !important;
+  color: var(--sathub-primary-deep) !important;
+  background: var(--sathub-primary-bg) !important;
   border-radius: 6px !important;
   font-weight: 600;
 }
@@ -363,17 +363,17 @@ body {
 }
 
 .app-header .ant-btn {
-  border-color: var(--airmap-border);
-  background: var(--airmap-surface);
+  border-color: var(--sathub-border);
+  background: var(--sathub-surface);
   color: #3e4d68;
   font-weight: 500;
 }
 
 .app-header .ant-btn:hover,
 .app-header .ant-btn:focus-visible {
-  border-color: var(--airmap-primary-hover);
-  color: var(--airmap-primary);
-  background: var(--airmap-primary-bg);
+  border-color: var(--sathub-primary-hover);
+  color: var(--sathub-primary);
+  background: var(--sathub-primary-bg);
 }
 
 /* 用户胶囊 */
@@ -383,23 +383,23 @@ body {
   gap: 8px;
   height: 34px;
   padding: 0 10px 0 4px;
-  border: 1px solid var(--airmap-border);
+  border: 1px solid var(--sathub-border);
   border-radius: 17px;
-  background: var(--airmap-surface);
-  color: var(--airmap-text);
+  background: var(--sathub-surface);
+  color: var(--sathub-text);
   cursor: pointer;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
 
 .user-chip:hover {
-  border-color: var(--airmap-primary-hover);
-  background: var(--airmap-primary-bg);
+  border-color: var(--sathub-primary-hover);
+  background: var(--sathub-primary-bg);
 }
 
 .user-chip-name {
   max-width: 120px;
   overflow: hidden;
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 13px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -409,26 +409,26 @@ body {
 .user-chip-role {
   padding: 1px 7px;
   border-radius: 10px;
-  background: var(--airmap-primary-bg);
-  color: var(--airmap-primary-deep);
+  background: var(--sathub-primary-bg);
+  color: var(--sathub-primary-deep);
   font-size: 11px;
   font-weight: 600;
 }
 
 .user-chip-arrow {
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 10px;
 }
 
 .user-avatar {
-  background: var(--airmap-primary);
+  background: var(--sathub-primary);
 }
 
 .app-content {
   min-width: 0;
   height: calc(100vh - 60px);
   overflow: auto;
-  background: var(--airmap-canvas);
+  background: var(--sathub-canvas);
 }
 
 .app-content-data,
@@ -449,7 +449,7 @@ body {
   display: inline-block;
   padding: 6px 12px;
   border: 1px solid #f5d7d7;
-  border-radius: var(--airmap-radius);
+  border-radius: var(--sathub-radius);
   background: #fdeeee;
   color: #b04747;
   font-size: 12px;
@@ -498,7 +498,7 @@ body {
 
 .visual-page-header-copy .ant-typography-title {
   margin: 0;
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 22px;
   font-weight: 650;
   letter-spacing: 0;
@@ -529,10 +529,10 @@ body {
   flex-direction: column;
   gap: 8px;
   padding: 14px 16px;
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius-lg);
-  background: var(--airmap-surface);
-  box-shadow: var(--airmap-shadow-sm);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius-lg);
+  background: var(--sathub-surface);
+  box-shadow: var(--sathub-shadow-sm);
 }
 
 .visual-metric-head {
@@ -547,13 +547,13 @@ body {
   width: 30px;
   height: 30px;
   border-radius: 7px;
-  background: var(--airmap-primary-bg);
-  color: var(--airmap-primary);
+  background: var(--sathub-primary-bg);
+  color: var(--sathub-primary);
   font-size: 15px;
 }
 
 .visual-metric-label {
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0;
@@ -568,7 +568,7 @@ body {
 
 .visual-metric-body .ant-typography-title {
   margin: 0;
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 26px;
   font-weight: 650;
   line-height: 1.05;
@@ -579,8 +579,8 @@ body {
 }
 
 .visual-metric-tone-success .visual-metric-icon {
-  background: var(--airmap-success-bg);
-  color: var(--airmap-success);
+  background: var(--sathub-success-bg);
+  color: var(--sathub-success);
 }
 
 .visual-metric-tone-success .visual-metric-body .ant-typography-title {
@@ -588,8 +588,8 @@ body {
 }
 
 .visual-metric-tone-warning .visual-metric-icon {
-  background: var(--airmap-warning-bg);
-  color: var(--airmap-warning);
+  background: var(--sathub-warning-bg);
+  color: var(--sathub-warning);
 }
 
 .visual-metric-tone-warning .visual-metric-body .ant-typography-title {
@@ -597,8 +597,8 @@ body {
 }
 
 .visual-metric-tone-danger .visual-metric-icon {
-  background: var(--airmap-danger-bg);
-  color: var(--airmap-danger);
+  background: var(--sathub-danger-bg);
+  color: var(--sathub-danger);
 }
 
 .visual-metric-tone-danger .visual-metric-body .ant-typography-title {
@@ -613,9 +613,9 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 7px 12px;
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius);
-  background: var(--airmap-surface);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius);
+  background: var(--sathub-surface);
 }
 
 .visual-section-bar > div:first-child {
@@ -628,7 +628,7 @@ body {
 .visual-section-bar-title {
   position: relative;
   padding-left: 10px;
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 13.5px;
 }
 
@@ -640,7 +640,7 @@ body {
   width: 3px;
   height: 12px;
   border-radius: 2px;
-  background: var(--airmap-primary);
+  background: var(--sathub-primary);
   transform: translateY(-50%);
 }
 
@@ -666,10 +666,10 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius-lg);
-  background: var(--airmap-surface);
-  box-shadow: var(--airmap-shadow-sm);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius-lg);
+  background: var(--sathub-surface);
+  box-shadow: var(--sathub-shadow-sm);
 }
 
 .dataset-toolbar .ant-input-search {
@@ -709,7 +709,7 @@ body {
 }
 
 .basic-filter-item .ant-form-item-label > label {
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 12px;
 }
 
@@ -755,7 +755,7 @@ body {
   justify-content: flex-end;
   gap: 8px;
   padding-top: 4px;
-  border-top: 1px solid var(--airmap-border-soft);
+  border-top: 1px solid var(--sathub-border-soft);
 }
 
 /* ---------- 表格 ---------- */
@@ -763,10 +763,10 @@ body {
 .catalog-page > .ant-table-wrapper,
 .datasets-page > .ant-table-wrapper,
 .services-page > .ant-table-wrapper {
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius-lg);
-  background: var(--airmap-surface);
-  box-shadow: var(--airmap-shadow-sm);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius-lg);
+  background: var(--sathub-surface);
+  box-shadow: var(--sathub-shadow-sm);
   overflow: hidden;
 }
 
@@ -793,7 +793,7 @@ body {
 .datasets-page .ant-table-thead > tr > th,
 .services-page .ant-table-thead > tr > th {
   height: 38px;
-  border-bottom-color: var(--airmap-border-soft);
+  border-bottom-color: var(--sathub-border-soft);
   background: #f7f9fd;
   color: #5d6b82;
   font-size: 12px;
@@ -826,37 +826,37 @@ body {
 }
 
 .status-tag-success {
-  background: var(--airmap-success-bg) !important;
+  background: var(--sathub-success-bg) !important;
   border-color: transparent !important;
   color: #0f7f70 !important;
 }
 
 .status-tag-processing {
-  background: var(--airmap-info-bg) !important;
+  background: var(--sathub-info-bg) !important;
   border-color: transparent !important;
   color: #2c5fd8 !important;
 }
 
 .status-tag-info {
-  background: var(--airmap-info-bg) !important;
+  background: var(--sathub-info-bg) !important;
   border-color: transparent !important;
   color: #2c6fae !important;
 }
 
 .status-tag-warning {
-  background: var(--airmap-warning-bg) !important;
+  background: var(--sathub-warning-bg) !important;
   border-color: transparent !important;
   color: #a86f14 !important;
 }
 
 .status-tag-error {
-  background: var(--airmap-danger-bg) !important;
+  background: var(--sathub-danger-bg) !important;
   border-color: transparent !important;
   color: #b64848 !important;
 }
 
 .status-tag-muted {
-  background: var(--airmap-muted-bg) !important;
+  background: var(--sathub-muted-bg) !important;
   border-color: transparent !important;
   color: #6b7890 !important;
 }
@@ -877,14 +877,14 @@ body {
 
 .system-management-heading h1 {
   margin: 0;
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 22px;
   font-weight: 650;
 }
 
 .system-management-heading p {
   margin: 3px 0 0;
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 12.5px;
 }
 
@@ -915,7 +915,7 @@ body {
 }
 
 .management-metrics .ant-card {
-  border-radius: var(--airmap-radius-lg);
+  border-radius: var(--sathub-radius-lg);
 }
 
 /* 旧版系统页仍使用的头部类 */
@@ -929,14 +929,14 @@ body {
 
 .page-header .ant-typography-title {
   margin: 0;
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-size: 21px;
   font-weight: 650;
 }
 
 .section-card {
-  border-color: var(--airmap-border-soft);
-  box-shadow: var(--airmap-shadow-sm);
+  border-color: var(--sathub-border-soft);
+  box-shadow: var(--sathub-shadow-sm);
 }
 
 .page-shell {
@@ -957,22 +957,22 @@ body {
   position: relative;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius-lg);
-  background: var(--airmap-surface);
-  box-shadow: var(--airmap-shadow-sm);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius-lg);
+  background: var(--sathub-surface);
+  box-shadow: var(--sathub-shadow-sm);
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .catalog-card:hover {
   border-color: #a9c9ef;
-  box-shadow: var(--airmap-shadow-md);
+  box-shadow: var(--sathub-shadow-md);
   transform: translateY(-2px);
 }
 
 .catalog-card-selected {
-  border-color: var(--airmap-primary);
-  box-shadow: 0 0 0 1px var(--airmap-primary), var(--airmap-shadow-md);
+  border-color: var(--sathub-primary);
+  box-shadow: 0 0 0 1px var(--sathub-primary), var(--sathub-shadow-md);
 }
 
 .catalog-card-check {
@@ -1011,7 +1011,7 @@ body {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid var(--airmap-border-soft);
+  border: 1px solid var(--sathub-border-soft);
   border-radius: 5px;
   background: #eef1f6;
 }
@@ -1041,8 +1041,8 @@ body {
 }
 
 .imagery-detail-content .imagery-thumbnail-large {
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius-lg);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius-lg);
 }
 
 .detail-map,
@@ -1050,8 +1050,8 @@ body {
   width: 100%;
   height: 220px;
   overflow: hidden;
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius-lg);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius-lg);
   background: #eef1f6;
 }
 
@@ -1061,7 +1061,7 @@ body {
 
 .record-id {
   overflow-wrap: anywhere;
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 11px;
 }
 
@@ -1144,19 +1144,19 @@ body {
 }
 
 .selection-toolbar .ant-typography {
-  color: var(--airmap-text-strong);
+  color: var(--sathub-text-strong);
   font-weight: 600;
 }
 
 .selection-toolbar .ant-btn:not(.ant-btn-primary) {
   border-color: #d8e1ef;
   color: #50607a;
-  background: var(--airmap-surface);
+  background: var(--sathub-surface);
 }
 
 .selection-toolbar .ant-btn:not(.ant-btn-primary):hover {
-  border-color: var(--airmap-primary-hover);
-  color: var(--airmap-primary);
+  border-color: var(--sathub-primary-hover);
+  color: var(--sathub-primary);
 }
 
 /* ---------- 数据集详情 ---------- */
@@ -1190,9 +1190,9 @@ body {
   grid-template-columns: 76px minmax(0, 1fr);
   gap: 9px;
   padding: 8px;
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius);
-  background: var(--airmap-surface);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius);
+  background: var(--sathub-surface);
 }
 
 .dataset-member-main {
@@ -1245,7 +1245,7 @@ body {
 }
 
 .map-basemap-switcher .ant-typography {
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1267,7 +1267,7 @@ body {
 .map-search-panel .ant-tabs-tab,
 .map-layer-toolbar .ant-typography,
 .map-layer-toolbar .ant-btn-text {
-  color: var(--airmap-text-muted);
+  color: var(--sathub-text-muted);
 }
 
 .map-search-panel .ant-typography-secondary,
@@ -1283,11 +1283,11 @@ body {
 }
 
 .map-search-panel .ant-tabs-nav::before {
-  border-bottom-color: var(--airmap-border-soft);
+  border-bottom-color: var(--sathub-border-soft);
 }
 
 .map-search-panel .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: var(--airmap-primary-deep);
+  color: var(--sathub-primary-deep);
   font-weight: 600;
 }
 
@@ -1298,7 +1298,7 @@ body {
 .map-search-panel .ant-input-number,
 .map-search-panel .ant-segmented {
   border-color: #d8e1ef !important;
-  background: var(--airmap-surface) !important;
+  background: var(--sathub-surface) !important;
   color: #35445f !important;
 }
 
@@ -1317,8 +1317,8 @@ body {
 }
 
 .map-search-panel .ant-input-search-button {
-  border-color: var(--airmap-primary) !important;
-  background: var(--airmap-primary) !important;
+  border-color: var(--sathub-primary) !important;
+  background: var(--sathub-primary) !important;
   color: #ffffff !important;
   font-weight: 600;
 }
@@ -1331,21 +1331,21 @@ body {
 
 .map-search-panel .ant-segmented-item-selected {
   color: #ffffff !important;
-  background: var(--airmap-primary) !important;
+  background: var(--sathub-primary) !important;
 }
 
 .map-search-panel .ant-btn-default,
 .map-layer-toolbar .ant-btn-text {
   border-color: #d8e1ef;
-  background: var(--airmap-surface);
+  background: var(--sathub-surface);
   color: #50607a;
 }
 
 .map-search-panel .ant-btn-default:hover,
 .map-layer-toolbar .ant-btn-text:hover {
-  border-color: var(--airmap-primary-hover);
-  color: var(--airmap-primary);
-  background: var(--airmap-primary-bg);
+  border-color: var(--sathub-primary-hover);
+  color: var(--sathub-primary);
+  background: var(--sathub-primary-bg);
 }
 
 /* 紧凑筛选（地图左栏） */
@@ -1377,7 +1377,7 @@ body {
 
 .map-filter-section-title {
   padding-top: 4px;
-  border-top: 1px solid var(--airmap-border-soft);
+  border-top: 1px solid var(--sathub-border-soft);
   color: #34435e;
   font-size: 12px;
   font-weight: 600;
@@ -1483,9 +1483,9 @@ body {
   align-items: center;
   gap: 4px;
   padding: 7px 8px;
-  border: 1px solid var(--airmap-border-soft);
+  border: 1px solid var(--sathub-border-soft);
   border-radius: 6px;
-  background: var(--airmap-surface);
+  background: var(--sathub-surface);
   transition: border-color 150ms ease, background-color 150ms ease;
 }
 
@@ -1549,7 +1549,7 @@ body {
 }
 
 .map-layer-toolbar .ant-slider-track {
-  background: var(--airmap-primary);
+  background: var(--sathub-primary);
 }
 
 .map-layer-toolbar-name {
@@ -1587,10 +1587,10 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--airmap-border-soft);
+  border: 1px solid var(--sathub-border-soft);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: var(--airmap-shadow-md);
+  box-shadow: var(--sathub-shadow-md);
   backdrop-filter: blur(6px);
 }
 
@@ -1601,7 +1601,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--airmap-border-soft);
+  border-bottom: 1px solid var(--sathub-border-soft);
 }
 
 .map-detail-header > div {
@@ -1649,7 +1649,7 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 32px;
   align-items: center;
-  border-bottom: 1px solid var(--airmap-border-soft);
+  border-bottom: 1px solid var(--sathub-border-soft);
   min-width: 0;
 }
 
@@ -1665,7 +1665,7 @@ body {
 }
 
 .map-saved-search > button:first-child:hover {
-  background: var(--airmap-surface-muted);
+  background: var(--sathub-surface-muted);
 }
 
 /* ---------- 服务预览 ---------- */
@@ -1676,8 +1676,8 @@ body {
   height: min(610px, 66vh);
   min-height: 420px;
   overflow: hidden;
-  border: 1px solid var(--airmap-border-soft);
-  border-radius: var(--airmap-radius-lg);
+  border: 1px solid var(--sathub-border-soft);
+  border-radius: var(--sathub-radius-lg);
   background: #eef1f6;
 }
 
@@ -1689,7 +1689,7 @@ body {
 }
 
 .services-page .ant-progress-bg {
-  background: var(--airmap-primary);
+  background: var(--sathub-primary);
 }
 
 /* ---------- 抽屉与卡片 ---------- */
@@ -1698,7 +1698,7 @@ body {
 .governance-drawer .ant-drawer-header,
 .ant-drawer .ant-drawer-header {
   min-height: 58px;
-  border-bottom-color: var(--airmap-border-soft);
+  border-bottom-color: var(--sathub-border-soft);
 }
 
 .import-drawer .ant-drawer-title,
@@ -1709,16 +1709,16 @@ body {
 
 .ant-drawer .ant-drawer-header,
 .ant-modal .ant-modal-header {
-  border-bottom-color: var(--airmap-border-soft);
+  border-bottom-color: var(--sathub-border-soft);
 }
 
 .ant-card {
-  border-color: var(--airmap-border-soft);
-  box-shadow: var(--airmap-shadow-sm);
+  border-color: var(--sathub-border-soft);
+  box-shadow: var(--sathub-shadow-sm);
 }
 
 .ant-card-head {
-  border-bottom-color: var(--airmap-border-soft);
+  border-bottom-color: var(--sathub-border-soft);
 }
 
 .ant-card .ant-card-head-title {
@@ -1732,12 +1732,12 @@ body {
 }
 
 .import-drawer .ant-upload-drag:hover {
-  border-color: var(--airmap-primary);
+  border-color: var(--sathub-primary);
   background: #f1f7ff;
 }
 
 .import-drawer .ant-upload-drag-icon .anticon {
-  color: var(--airmap-primary);
+  color: var(--sathub-primary);
 }
 
 .governance-drawer .ant-tabs-tab {
@@ -1745,8 +1745,8 @@ body {
 }
 
 .governance-drawer .ant-table-wrapper {
-  border: 1px solid var(--airmap-border);
-  border-radius: var(--airmap-radius);
+  border: 1px solid var(--sathub-border);
+  border-radius: var(--sathub-radius);
   overflow: hidden;
 }
 

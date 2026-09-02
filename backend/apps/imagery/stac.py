@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-STAC_COLLECTION = "airmap-imagery"
+STAC_COLLECTION = "sathub-imagery"
 SAR_EXTENSION = "https://stac-extensions.github.io/sar/v1.0.0/schema.json"
 PROJ_EXTENSION = "https://stac-extensions.github.io/projection/v1.1.0/schema.json"
 
@@ -30,31 +30,31 @@ def build_stac_item_from_metadata(*, scene_key: str, image_id: str, metadata: di
         "sar:pixel_spacing_azimuth": metadata.get("pixel_spacing_azimuth_m"),
         "proj:epsg": metadata.get("epsg"),
         "proj:shape": [metadata.get("height"), metadata.get("width")] if metadata.get("height") and metadata.get("width") else None,
-        "airmap:satellite_code": metadata.get("platform_code"),
-        "airmap:satellite_name": metadata.get("satellite_name"),
-        "airmap:sensor": metadata.get("sensor"),
-        "airmap:polarization": metadata.get("polarization"),
-        "airmap:polarization_raw": metadata.get("polarization_raw"),
-        "airmap:imaging_mode_raw": metadata.get("imaging_mode_raw"),
-        "airmap:imaging_mode_detail": metadata.get("imaging_mode_detail"),
-        "airmap:imaging_mode_code": metadata.get("imaging_mode_code"),
-        "airmap:acquisition_start": _iso(metadata.get("acquisition_start")),
-        "airmap:acquisition_end": _iso(metadata.get("acquisition_end")),
-        "airmap:time_assumption": metadata.get("time_assumption"),
-        "airmap:orbit_id": metadata.get("orbit_id"),
-        "airmap:orbit_direction": metadata.get("orbit_direction"),
-        "airmap:incidence_angle_near_deg": metadata.get("incidence_angle_near_deg"),
-        "airmap:incidence_angle_far_deg": metadata.get("incidence_angle_far_deg"),
-        "airmap:resolution_m": metadata.get("resolution_m"),
-        "airmap:metadata_status": metadata.get("metadata_status"),
-        "airmap:spatial_status": metadata.get("spatial_status"),
-        "airmap:preview_status": metadata.get("preview_status"),
-        "airmap:cog_status": metadata.get("cog_status"),
-        "airmap:source_name": metadata.get("source_name"),
-        "airmap:display_name": metadata.get("display_name"),
-        "airmap:description": metadata.get("description"),
-        "airmap:is_archived": bool(metadata.get("is_archived")),
-        "airmap:project_ids": project_ids or [],
+        "sathub:satellite_code": metadata.get("platform_code"),
+        "sathub:satellite_name": metadata.get("satellite_name"),
+        "sathub:sensor": metadata.get("sensor"),
+        "sathub:polarization": metadata.get("polarization"),
+        "sathub:polarization_raw": metadata.get("polarization_raw"),
+        "sathub:imaging_mode_raw": metadata.get("imaging_mode_raw"),
+        "sathub:imaging_mode_detail": metadata.get("imaging_mode_detail"),
+        "sathub:imaging_mode_code": metadata.get("imaging_mode_code"),
+        "sathub:acquisition_start": _iso(metadata.get("acquisition_start")),
+        "sathub:acquisition_end": _iso(metadata.get("acquisition_end")),
+        "sathub:time_assumption": metadata.get("time_assumption"),
+        "sathub:orbit_id": metadata.get("orbit_id"),
+        "sathub:orbit_direction": metadata.get("orbit_direction"),
+        "sathub:incidence_angle_near_deg": metadata.get("incidence_angle_near_deg"),
+        "sathub:incidence_angle_far_deg": metadata.get("incidence_angle_far_deg"),
+        "sathub:resolution_m": metadata.get("resolution_m"),
+        "sathub:metadata_status": metadata.get("metadata_status"),
+        "sathub:spatial_status": metadata.get("spatial_status"),
+        "sathub:preview_status": metadata.get("preview_status"),
+        "sathub:cog_status": metadata.get("cog_status"),
+        "sathub:source_name": metadata.get("source_name"),
+        "sathub:display_name": metadata.get("display_name"),
+        "sathub:description": metadata.get("description"),
+        "sathub:is_archived": bool(metadata.get("is_archived")),
+        "sathub:project_ids": project_ids or [],
     }
     properties = {key: value for key, value in properties.items() if value not in (None, [], "")}
     item_dict = {

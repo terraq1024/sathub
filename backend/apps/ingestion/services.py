@@ -783,7 +783,7 @@ def _duckdb_record(record, item, metadata, stac_json, asset_paths=None):
     return {
         "image_id": record.id,
         "stac_id": record.stac_id,
-        "collection_id": "airmap-imagery",
+        "collection_id": "sathub-imagery",
         "scene_key": record.scene_key,
         "project_id": str(item.job.project_id) if item.job.project_id else "",
         "project_ids": "|".join(str(project_id) for project_id in record.project_tags.values_list("project_id", flat=True)),

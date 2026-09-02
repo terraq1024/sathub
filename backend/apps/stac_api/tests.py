@@ -16,7 +16,7 @@ urlpatterns = [
 ]
 
 
-@override_settings(ROOT_URLCONF="apps.stac_api.tests", STAC_DIR=Path(tempfile.gettempdir()) / "airmap-stac-tests")
+@override_settings(ROOT_URLCONF="apps.stac_api.tests", STAC_DIR=Path(tempfile.gettempdir()) / "sathub-stac-tests")
 class StacApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -49,7 +49,7 @@ class StacApiTests(TestCase):
         self.assertIn("/api/imagery/image-1/assets/preview", response.data["features"][0]["assets"]["preview"]["href"])
 
     def test_collection_items_reuses_search_and_deduplicates_fallbacks(self):
-        response = self.client.get("/api/stac/collections/airmap-imagery/items", {"datetime": "2024-01-01T00:00:00Z/2024-12-31T23:59:59Z"})
+        response = self.client.get("/api/stac/collections/sathub-imagery/items", {"datetime": "2024-01-01T00:00:00Z/2024-12-31T23:59:59Z"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["numberMatched"], 1)
         self.assertEqual(response.data["numberReturned"], 1)
@@ -90,7 +90,7 @@ class StacApiTests(TestCase):
         self.client.force_authenticate(None)
         self.assertIn(self.client.get("/api/stac/").status_code, (401, 403))
         self.client.force_authenticate(self.user)
-        self.assertEqual(self.client.get("/api/stac/").data["id"], "airmap-catalog")
-        self.assertEqual(self.client.get("/api/stac/collections").data["collections"][0]["id"], "airmap-imagery")
-        self.assertEqual(self.client.get("/api/stac/collections/airmap-imagery").data["id"], "airmap-imagery")
-        self.assertEqual(self.client.get("/api/stac/collections/airmap-imagery/items/scene-1").data["id"], "scene-1")
+        self.assertEqual(self.client.get("/api/stac/").data["id"], "sathub-catalog")
+        self.assertEqual(self.client.get("/api/stac/collections").data["collections"][0]["id"], "sathub-imagery")
+        self.assertEqual(self.client.get("/api/stac/collections/sathub-imagery").data["id"], "sathub-imagery")
+        self.assertEqual(self.client.get("/api/stac/collections/sathub-imagery/items/scene-1").data["id"], "scene-1")

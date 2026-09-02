@@ -93,8 +93,8 @@ def _from_env(value: str, default: str) -> Path:
     return path.resolve() if path.is_absolute() else (ROOT_DIR / path).resolve()
 
 
-DATA_DIR = _from_env(os.environ.get("AIRMAP_DATA_ROOT"), str(ROOT_DIR / "data"))
-DUCKDB_PATH = _from_env(os.environ.get("AIRMAP_DUCKDB_PATH"), str(ROOT_DIR / "duckdb" / "imagery.duckdb"))
+DATA_DIR = _from_env(os.environ.get("SATHUB_DATA_ROOT"), str(ROOT_DIR / "data"))
+DUCKDB_PATH = _from_env(os.environ.get("SATHUB_DUCKDB_PATH"), str(ROOT_DIR / "duckdb" / "imagery.duckdb"))
 UPLOAD_TEMP_DIR = DATA_DIR / "upload-tmp"
 STAGING_DIR = DATA_DIR / "staging"
 RAW_DIR = DATA_DIR / "raw"
