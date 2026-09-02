@@ -269,6 +269,59 @@ class ImageryApiTests(ImageryApiTestBase):
         self.assertTrue(any(item["value"] == "HH" for item in response.data["polarizations"]))
 
 
+class ImageryRemovalTests(ImageryApiTestBase):
+    def _make_asset_file(self, imagery, role, access_mode, path=None):
+        from apps.imagery.models import ImageryAsset
+        asset_path = Path(path) if path else Path(self.temporary_directory.name) / f"{imagery.pk}-{role}.dat"
+        asset_path.write_bytes(b"payload")
+        return ImageryAsset.objects.create(
+            imagery=imagery, role=role, name=asset_path.name, path=str(asset_path),
+            access_mode=access_mode, media_type="application/octet-stream", size_bytes=7,
+        )
+
+    def test_remove_deletes_managed_files_but_keeps_referenced_sources(self):
+        from apps.imagery.models import ImageryAsset
+        imagery = self.create_imagery("image-remove")
+        source_dir = Path(self.temporary_directory.name) / "source-root" / "scene"
+        source_dir.mkdir(parents=True, exist_ok=True)
+        source_file = source_dir / "scene.tif"
+        source_file.write_bytes(b"referenced-data")
+
+        managed = self._make_asset_file(imagery, "data", ImageryAsset.ACCESS_MANAGED)
+        referenced = self._make_asset_file(imagery, "preview", ImageryAsset.ACCESS_REFERENCE, path=source_file)
+
+        response = self.client.delete(f"/api/imagery/{imagery.pk}/remove")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["referenced_assets_kept"])
+
+        self.assertFalse(ImageryRecord.objects.filter(pk=imagery.pk).exists())
+        self.assertFalse(Path(managed.path).exists(), "managed file must be deleted")
+        self.assertTrue(source_file.exists(), "referenced source must stay in the endpoint")
+
+        # gone from catalog and map index
+        self.assertEqual(self.client.get("/api/imagery/").data["count"], 0)
+        self.assertEqual(self.client.get("/api/imagery/map").data["count"], 0)
+
+    def test_remove_requires_manager(self):
+        imagery = self.create_imagery("image-remove")
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.delete(f"/api/imagery/{imagery.pk}/remove").status_code, 403)
+        self.assertTrue(ImageryRecord.objects.filter(pk=imagery.pk).exists())
+
+    def test_remove_drops_dataset_members_and_stac_file(self):
+        imagery = self.create_imagery("image-remove")
+        dataset = ImageryDataset.objects.create(name="D", created_by=self.owner)
+        ImageryDatasetMember.objects.create(dataset=dataset, imagery=imagery, position=0, added_by=self.owner)
+        # sync_imagery_projection updated stac_path on its own instance; the
+        # local object is stale, so read the persisted value.
+        stac_path = Path(ImageryRecord.objects.get(pk=imagery.pk).stac_path)
+
+        response = self.client.delete(f"/api/imagery/{imagery.pk}/remove")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(stac_path.exists())
+        self.assertEqual(dataset.members.count(), 0)
+
+
 class ImageryDatasetApiTests(ImageryApiTestBase):
     def setUp(self):
         super().setUp()

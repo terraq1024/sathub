@@ -46,6 +46,7 @@ from .services import (
     sync_imagery_projection_safely,
     update_dataset_member,
     refresh_query_dataset,
+    remove_imagery,
     resolve_asset_path,
 )
 
@@ -185,6 +186,26 @@ class ImageryDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ImageryRemoveView(APIView):
+    """Hard-remove an imagery record from catalog, index and (for managed
+    assets) the platform data directory.
+
+    Referenced assets (directory ingestion) are never deleted from their
+    storage endpoint — only the catalog entry goes.
+    """
+
+    def delete(self, request, image_id):
+        with transaction.atomic():
+            imagery = get_object_or_404(ImageryRecord.objects.select_for_update(), pk=image_id)
+            ensure_imagery_manager(imagery, request.user)
+            modes = {asset.role: getattr(asset, "access_mode", None) for asset in imagery.assets.all()}
+            has_managed = any(mode == ImageryAsset.ACCESS_MANAGED for mode in modes.values())
+            has_referenced = any(mode == ImageryAsset.ACCESS_REFERENCE for mode in modes.values())
+            remove_imagery(imagery, delete_files=True)
+        record_request_event(request, action="imagery.removed", object_type="imagery", object_id=image_id, payload={"had_managed_assets": has_managed})
+        return Response({"removed": image_id, "referenced_assets_kept": has_referenced}, status=status.HTTP_200_OK)
+
+
 class ImageryRestoreView(APIView):
     def post(self, request, image_id):
         changed = False
@@ -289,14 +310,20 @@ def _tiff_rotation_degrees(source: Path) -> float | None:
 
 
 def _warp_north_up(source: Path, cache_dir: Path) -> tuple[Path, list[float]] | None:
-    """Warp a rotated raster to an axis-aligned EPSG:4326 preview via the
-    TiTiler subprocess (the main runtime cannot import rasterio).
+    """Warp a rotated raster to an axis-aligned EPSG:4326 preview.
 
+    Runs in an isolated Python subprocess with rasterio: the dedicated
+    TiTiler runtime when configured, otherwise the current interpreter
+    (the OSS requirements install rasterio into the main environment).
     Returns (jpeg_path, 4326 bounds) so the overlay can be placed exactly.
     """
     python = Path(settings.TITILER_PYTHON)
+    if not python.is_file():
+        import sys
+
+        python = Path(sys.executable)
     script = Path(__file__).with_name("preview_warper.py")
-    if not python.is_file() or not script.is_file():
+    if not script.is_file():
         return None
     try:
         result = subprocess.run(
@@ -401,6 +428,16 @@ def _serve_preview_as_jpeg(asset, source: Path):
 
 class ImageryAssetView(APIView):
     def get(self, request, image_id, role):
+        return self._serve(request, image_id, role)
+
+    def head(self, request, image_id, role):
+        # Browsers probe rotated-raster previews with HEAD to read the
+        # X-Imagery-Preview-Bounds alignment header before overlaying.
+        # DRF's default HEAD->GET mapping also covers this, but keeping an
+        # explicit handler guarantees the header on both methods.
+        return self._serve(request, image_id, role)
+
+    def _serve(self, request, image_id, role):
         try:
             asset = ImageryAsset.objects.select_related("imagery").get(
                 imagery_id=image_id,

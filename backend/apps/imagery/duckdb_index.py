@@ -329,6 +329,12 @@ def clear_index() -> None:
         conn.execute("DELETE FROM imagery_index")
 
 
+def delete_image(image_id: str) -> None:
+    with _connect() as conn:
+        _ensure_columns(conn)
+        conn.execute("DELETE FROM imagery_index WHERE image_id = ?", [image_id])
+
+
 def _row_to_dict(columns, row):
     data = dict(zip(columns, row))
     for field in ("stac_json", "footprint_geojson", "polarizations"):

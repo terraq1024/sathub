@@ -156,6 +156,7 @@ export const api = {
     request<Imagery>(`/api/imagery/${imageId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   archiveImagery: (imageId: string) => request<void>(`/api/imagery/${imageId}`, { method: 'DELETE' }),
   restoreImagery: (imageId: string) => request<Imagery>(`/api/imagery/${imageId}/restore`, { method: 'POST' }),
+  removeImagery: (imageId: string) => request<{ removed: string; referenced_assets_kept: boolean }>(`/api/imagery/${imageId}/remove`, { method: 'DELETE' }),
   batchImagery: (payload: ImageryBatchPayload) =>
     request<{ updated: number }>('/api/imagery/batch', { method: 'POST', body: JSON.stringify(payload) }),
   imageryStac: (imageId: string) => request<StacItem>(`/api/imagery/${imageId}/stac`),

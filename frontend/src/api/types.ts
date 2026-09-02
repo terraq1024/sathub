@@ -278,6 +278,7 @@ export interface ImagerySearchParams {
   polarizations?: string[];
   metadata_status?: string;
   preview_status?: string;
+  asset_access_modes?: Record<string, string>;
   cog_status?: string;
   administrative_unit_id?: string | number;
   classification_id?: string | number;
@@ -355,6 +356,7 @@ export interface Imagery {
   spatial_status?: string;
   metadata_status?: string;
   preview_status?: string;
+  asset_access_modes?: Record<string, string>;
   cog_status?: string;
   cog_error?: string;
   cog_updated_at?: string | null;

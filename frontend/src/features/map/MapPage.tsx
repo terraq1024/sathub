@@ -36,8 +36,29 @@ function PreviewImageLayer({
   splitPosition: number;
 }) {
   const bounds = imageryBounds(imagery);
+  const [warpedBounds, setWarpedBounds] = useState<[[number, number], [number, number]] | null>(null);
   const layerRef = useRef<LeafletImageOverlay | null>(null);
   const handleLayerRef = useCallback((layer: LeafletImageOverlay | null) => { layerRef.current = layer; }, []);
+  const previewUrl = api.imageryAssetUrl(imagery.image_id, imageryPreviewRole(imagery));
+
+  useEffect(() => {
+    // Rotated rasters (Umbra spotlight GEC and similar) are served as
+    // north-up warped JPEGs with their true 4326 bounds in this header.
+    // Placing them over the raw bbox would shear the overlay, so prefer
+    // the corrected bounds whenever the server provides them.
+    let cancelled = false;
+    fetch(previewUrl, { method: 'HEAD' })
+      .then((response) => {
+        const header = response.headers.get('X-Imagery-Preview-Bounds');
+        if (!header) return null;
+        const values = header.split(',').map(Number);
+        if (values.length !== 4 || values.some((value) => !Number.isFinite(value))) return null;
+        return [[values[1], values[0]], [values[3], values[2]]] as [[number, number], [number, number]];
+      })
+      .then((corrected) => { if (!cancelled) setWarpedBounds(corrected); })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [previewUrl]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -51,8 +72,8 @@ function PreviewImageLayer({
   return (
     <ImageOverlay
       ref={handleLayerRef}
-      url={api.imageryAssetUrl(imagery.image_id, imageryPreviewRole(imagery))}
-      bounds={bounds}
+      url={previewUrl}
+      bounds={warpedBounds ?? bounds}
       opacity={opacity}
       zIndex={zIndex}
     />

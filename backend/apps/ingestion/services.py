@@ -421,8 +421,12 @@ def _warp_preview_north_up(source: Path, destination: Path) -> Path | None:
     it as a normalized JPEG.
     """
     python = Path(settings.TITILER_PYTHON)
+    if not python.is_file():
+        import sys
+
+        python = Path(sys.executable)
     script = Path(__file__).resolve().parent.parent / "imagery" / "preview_warper.py"
-    if not python.is_file() or not script.is_file():
+    if not script.is_file():
         return None
     try:
         result = subprocess.run(
