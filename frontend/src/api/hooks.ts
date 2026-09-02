@@ -142,6 +142,11 @@ export function useRestoreImagery() {
   return useMutation({ mutationFn: api.restoreImagery, onSuccess: (_, imageId) => invalidateImagery(queryClient, imageId) });
 }
 
+export function useRemoveImagery() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: (imageId: string) => api.removeImagery(imageId), onSuccess: (_, imageId) => invalidateImagery(queryClient, imageId) });
+}
+
 export function useBatchImagery() {
   const queryClient = useQueryClient();
   return useMutation({

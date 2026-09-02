@@ -49,6 +49,7 @@ def build_stac_item_from_metadata(*, scene_key: str, image_id: str, metadata: di
         "sathub:metadata_status": metadata.get("metadata_status"),
         "sathub:spatial_status": metadata.get("spatial_status"),
         "sathub:preview_status": metadata.get("preview_status"),
+        "sathub:preview_warp_bounds": metadata.get("preview_warp_bounds"),
         "sathub:cog_status": metadata.get("cog_status"),
         "sathub:source_name": metadata.get("source_name"),
         "sathub:display_name": metadata.get("display_name"),

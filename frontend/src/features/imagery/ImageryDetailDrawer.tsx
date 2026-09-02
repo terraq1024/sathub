@@ -15,13 +15,14 @@ import {
   Tag,
   Typography
 } from 'antd';
-import { DeleteOutlined, DownloadOutlined, EditOutlined, RollbackOutlined, SaveOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownloadOutlined, EditOutlined, RestOutlined, RollbackOutlined, SaveOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { ImageOverlay, MapContainer } from 'react-leaflet';
 import { api } from '../../api/client';
 import {
   useArchiveImagery,
   useImageryDetail,
+  useRemoveImagery,
   useRestoreImagery,
   useUpdateImagery
 } from '../../api/hooks';
@@ -47,6 +48,7 @@ export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser }:
   const updateImagery = useUpdateImagery();
   const archiveImagery = useArchiveImagery();
   const restoreImagery = useRestoreImagery();
+  const removeImagery = useRemoveImagery();
   const imagery = detailQuery.data;
   const bounds = useMemo(() => imageryBounds(imagery), [imagery]);
   const manageable = imagery ? canManageImagery(imagery, currentUser) : false;
@@ -75,6 +77,33 @@ export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser }:
     } catch (error) {
       if (error instanceof Error) message.error(normalizeError(error));
     }
+  };
+
+  const confirmRemove = () => {
+    if (!imagery) return;
+    const modes = imagery.asset_access_modes ?? {};
+    const hasManaged = Object.values(modes).some((mode) => mode === 'managed');
+    const hasReferenced = Object.values(modes).some((mode) => mode === 'reference');
+    const lines: string[] = [];
+    lines.push(hasManaged ? '将删除平台存储的上传数据文件（不可恢复）。' : '');
+    lines.push(hasReferenced ? '目录接入的引用文件保留在原目录，不会被删除。' : '');
+    lines.push('影像将从检索、地图和数据集中彻底移除。');
+    modal.confirm({
+      title: '彻底移除这景影像？',
+      content: lines.filter(Boolean).join(' '),
+      okText: '彻底移除',
+      okButtonProps: { danger: true },
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await removeImagery.mutateAsync(imagery.image_id);
+          message.success('影像已移除');
+          onClose();
+        } catch (error) {
+          message.error(normalizeError(error));
+        }
+      }
+    });
   };
 
   const confirmArchive = () => {
@@ -178,6 +207,7 @@ export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser }:
           <Space wrap>
             <Button icon={<DownloadOutlined />} href={api.imageryAssetUrl(imagery.image_id, 'data')}>下载</Button>
             {manageable && !imagery.is_archived ? <Button danger icon={<DeleteOutlined />} onClick={confirmArchive}>归档</Button> : null}
+            {manageable ? <Button danger type="primary" ghost icon={<RestOutlined />} onClick={confirmRemove}>移除</Button> : null}
             {manageable && imagery.is_archived ? <Button icon={<RollbackOutlined />} loading={restoreImagery.isPending} onClick={() => void restore()}>恢复</Button> : null}
           </Space>
           <Typography.Text type="secondary" className="record-id">ID：{imagery.image_id}</Typography.Text>

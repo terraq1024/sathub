@@ -77,6 +77,7 @@ class ImageryRecordSerializer(serializers.ModelSerializer):
     archived_by_username = serializers.CharField(source="archived_by.username", read_only=True, allow_null=True)
     project_ids = serializers.SerializerMethodField()
     can_manage = serializers.SerializerMethodField()
+    asset_access_modes = serializers.SerializerMethodField()
 
     class Meta:
         model = ImageryRecord
@@ -87,12 +88,16 @@ class ImageryRecordSerializer(serializers.ModelSerializer):
             "acquisition_end", "resolution_m", "bbox", "geometry", "metadata_status", "spatial_status",
             "preview_status", "cog_status", "cog_path", "cog_error", "cog_updated_at", "status", "project_ids", "first_uploaded_by", "first_uploaded_by_username",
             "is_archived", "archived_at", "archived_by", "archived_by_username", "can_manage",
+            "asset_access_modes",
             "created_at", "updated_at",
         ]
         read_only_fields = fields
 
     def get_project_ids(self, obj):
         return list(obj.project_tags.values_list("project_id", flat=True))
+
+    def get_asset_access_modes(self, obj):
+        return {asset.role: asset.access_mode for asset in obj.assets.all()}
 
     def get_can_manage(self, obj):
         request = self.context.get("request")

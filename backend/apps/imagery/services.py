@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_asset_path(asset):
-    """Resolve a managed asset within the platform data root."""
+    """Resolve a managed or referenced asset within an explicitly allowed root."""
     try:
         candidate = Path(asset.path)
         if not candidate.is_absolute():
@@ -28,10 +28,15 @@ def resolve_asset_path(asset):
         path = candidate.resolve(strict=True)
     except (OSError, RuntimeError, ValueError) as exc:
         raise ValueError("资产路径无效或文件不存在。") from exc
-    root = Path(settings.DATA_DIR).resolve()
-    if not (path != root and root in path.parents):
-        # Keep pre-v8 manually registered assets readable during migration.
-        if getattr(asset, "access_mode", None) != ImageryAsset.ACCESS_MANAGED:
+    roots = [Path(settings.DATA_DIR).resolve()]
+    if getattr(asset, "access_mode", None) == ImageryAsset.ACCESS_REFERENCE and asset.storage_object_id:
+        from apps.storage_manager.backends import validate_local_root
+
+        roots.append(validate_local_root(asset.storage_object.endpoint.root_uri))
+    if not any(path != root and root in path.parents for root in roots):
+        # Keep pre-v8 manually registered assets readable during migration. New
+        # referenced assets always carry storage_object and are root-checked above.
+        if getattr(asset, "access_mode", None) != ImageryAsset.ACCESS_MANAGED or asset.storage_object_id:
             raise ValueError("资产路径不在允许的存储根目录内。")
     return path
 
@@ -98,6 +103,7 @@ def _metadata_from_record(imagery):
         "spatial_status": imagery.spatial_status,
         "cog_status": imagery.cog_status,
         "cog_path": imagery.cog_path,
+        "preview_warp_bounds": raw_metadata.get("preview_warp_bounds"),
     }
 
 
@@ -189,6 +195,7 @@ def _projection_record(imagery, stac_json):
         "preview_status": imagery.preview_status,
         "cog_status": imagery.cog_status,
         "cog_path": imagery.cog_path,
+        "asset_access_modes": {asset.role: asset.access_mode for asset in imagery.assets.all()},
         "footprint_geojson": imagery.geometry,
         "stac_path": imagery.stac_path,
         "status": imagery.status,
@@ -232,6 +239,62 @@ def rebuild_imagery_projection():
             logger.exception("Failed to rebuild imagery projection for %s", image_id)
             failures.append((str(image_id), str(exc)))
     return failures
+
+
+def remove_imagery(imagery, *, delete_files: bool):
+    """Hard-delete an imagery record and every derived footprint it owns.
+
+    Referenced assets (directory ingestion) stay in the registered storage
+    endpoint; only the platform's catalog rows, index entry, STAC item and
+    derived files (managed copies, generated previews) are removed.
+    """
+    from .duckdb_index import delete_image
+    from .stac import STAC_COLLECTION
+
+    image_id = str(imagery.pk)
+    stac_path = imagery.stac_path
+
+    with transaction.atomic():
+        for asset in imagery.assets.all():
+            _delete_asset_files(asset, delete_files=delete_files)
+        # Dataset membership is PROTECT-ed; an explicit removal must leave no
+        # dangling member rows behind, so drop them before the record itself.
+        ImageryDatasetMember.objects.filter(imagery=imagery).delete()
+        ImageryRecord.objects.filter(pk=imagery.pk).delete()
+
+    delete_image(image_id)
+    if stac_path:
+        try:
+            Path(stac_path).unlink(missing_ok=True)
+        except OSError:
+            logger.warning("Could not delete STAC item file %s", stac_path)
+    # Dataset member rows cascade-deleted with the record; the derived preview
+    # cache is name-spaced by image id and is safe to drop wholesale.
+    for cached in Path(settings.DERIVED_PREVIEW_DIR).glob(f"{image_id}-*"):
+        try:
+            cached.unlink(missing_ok=True)
+        except OSError:
+            pass
+    return image_id
+
+
+def _delete_asset_files(asset, *, delete_files: bool):
+    """Remove the physical file behind an asset when the platform owns it."""
+    if not delete_files:
+        return
+    if getattr(asset, "access_mode", None) != ImageryAsset.ACCESS_MANAGED:
+        # Referenced assets point into registered storage endpoints that the
+        # platform must never mutate — the catalog entry goes, the file stays.
+        return
+    try:
+        path = Path(asset.path)
+        path.unlink(missing_ok=True)
+        # Remove the per-scene directory (data/preview/thumbnail/...) once it
+        # is empty, so managed ingestion roots do not accumulate husks.
+        if path.parent.is_dir() and not any(path.parent.iterdir()):
+            path.parent.rmdir()
+    except (OSError, RuntimeError, ValueError) as exc:
+        logger.warning("Could not delete managed asset file %s: %s", asset.path, exc)
 
 
 def _locked_dataset(dataset):

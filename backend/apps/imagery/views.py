@@ -1,6 +1,7 @@
 from pathlib import Path
 import hashlib
 import json
+import os
 import subprocess
 from math import atan2, degrees as _degrees
 
@@ -46,6 +47,7 @@ from .services import (
     sync_imagery_projection_safely,
     update_dataset_member,
     refresh_query_dataset,
+    remove_imagery,
     resolve_asset_path,
 )
 
@@ -185,6 +187,26 @@ class ImageryDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ImageryRemoveView(APIView):
+    """Hard-remove an imagery record from catalog, index and (for managed
+    assets) the platform data directory.
+
+    Referenced assets (directory ingestion) are never deleted from their
+    storage endpoint — only the catalog entry goes.
+    """
+
+    def delete(self, request, image_id):
+        with transaction.atomic():
+            imagery = get_object_or_404(ImageryRecord.objects.select_for_update(), pk=image_id)
+            ensure_imagery_manager(imagery, request.user)
+            modes = {asset.role: getattr(asset, "access_mode", None) for asset in imagery.assets.all()}
+            has_managed = any(mode == ImageryAsset.ACCESS_MANAGED for mode in modes.values())
+            has_referenced = any(mode == ImageryAsset.ACCESS_REFERENCE for mode in modes.values())
+            remove_imagery(imagery, delete_files=True)
+        record_request_event(request, action="imagery.removed", object_type="imagery", object_id=image_id, payload={"had_managed_assets": has_managed})
+        return Response({"removed": image_id, "referenced_assets_kept": has_referenced}, status=status.HTTP_200_OK)
+
+
 class ImageryRestoreView(APIView):
     def post(self, request, image_id):
         changed = False
@@ -289,29 +311,20 @@ def _tiff_rotation_degrees(source: Path) -> float | None:
 
 
 def _warp_north_up(source: Path, cache_dir: Path) -> tuple[Path, list[float]] | None:
-    """Warp a rotated raster to an axis-aligned EPSG:4326 preview via the
-    TiTiler subprocess (the main runtime cannot import rasterio).
+    """Warp a rotated raster to an axis-aligned EPSG:4326 preview.
 
-    Returns (jpeg_path, 4326 bounds) so the overlay can be placed exactly.
+    Runs in whatever interpreter the warp runtime locates (an isolated
+    rasterio venv when configured, otherwise the current interpreter if it
+    can import rasterio). Returns (jpeg_path, 4326 bounds) so the overlay
+    can be placed exactly.
     """
-    python = Path(settings.TITILER_PYTHON)
+    from .warp_runtime import run_warp_payload
+
     script = Path(__file__).with_name("preview_warper.py")
-    if not python.is_file() or not script.is_file():
+    payload = run_warp_payload(script, {"source": str(source), "max_size": 2400})
+    if payload is None or not payload.get("ok"):
         return None
     try:
-        result = subprocess.run(
-            [str(python), str(script)],
-            input=json.dumps({"source": str(source), "max_size": 2400}),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=300,
-            check=False,
-        )
-        payload = json.loads(result.stdout or "{}")
-        if not payload.get("ok"):
-            return None
         import base64
 
         import numpy as np
@@ -399,8 +412,38 @@ def _serve_preview_as_jpeg(asset, source: Path):
         return None, None
 
 
+def _stored_preview_warp_bounds(imagery) -> list[float] | None:
+    """Read sathub:preview_warp_bounds off the record's STAC properties.
+
+    Ingest stores the corrected extent when the generated preview is a
+    north-up warp of a rotated raster.
+    """
+    try:
+        item = None
+        if imagery.stac_path:
+            item = json.loads(Path(imagery.stac_path).read_text(encoding="utf-8"))
+        if not isinstance(item, dict):
+            return None
+        bounds = (item.get("properties") or {}).get("sathub:preview_warp_bounds")
+        if isinstance(bounds, list) and len(bounds) == 4 and all(isinstance(v, (int, float)) for v in bounds):
+            return [float(v) for v in bounds]
+    except (OSError, ValueError, TypeError):
+        pass
+    return None
+
+
 class ImageryAssetView(APIView):
     def get(self, request, image_id, role):
+        return self._serve(request, image_id, role)
+
+    def head(self, request, image_id, role):
+        # Browsers probe rotated-raster previews with HEAD to read the
+        # X-Imagery-Preview-Bounds alignment header before overlaying.
+        # DRF's default HEAD->GET mapping also covers this, but keeping an
+        # explicit handler guarantees the header on both methods.
+        return self._serve(request, image_id, role)
+
+    def _serve(self, request, image_id, role):
         try:
             asset = ImageryAsset.objects.select_related("imagery").get(
                 imagery_id=image_id,
@@ -432,6 +475,13 @@ class ImageryAssetView(APIView):
             response["Content-Length"] = str(path.stat().st_size)
         except OSError:
             return Response({"detail": "Asset file is missing."}, status=status.HTTP_404_NOT_FOUND)
+        # Ingest-generated previews of rotated rasters are already warped
+        # north-up JPEGs; their corrected extent is stored on the record's
+        # STAC properties and surfaces through the same alignment header.
+        if role == "preview":
+            warp_bounds = _stored_preview_warp_bounds(asset.imagery)
+            if warp_bounds:
+                response["X-Imagery-Preview-Bounds"] = ",".join(f"{value:.7f}" for value in warp_bounds)
         return response
 
 

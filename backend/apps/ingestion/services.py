@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import urllib.parse
@@ -17,11 +18,7 @@ from apps.imagery.duckdb_index import upsert_image
 from apps.imagery.metadata import build_scene_key, is_image_file, parse_product_group, scan_product_groups
 from apps.imagery.models import ImageryAsset, ImageryProjectTag, ImageryRecord
 
-try:
-    from apps.storage_manager.models import StorageEndpoint, StorageObject
-except ImportError:  # OSS edition bundles without the storage manager app
-    StorageEndpoint = None
-    StorageObject = None
+from apps.storage_manager.models import StorageEndpoint, StorageObject
 
 from apps.imagery.services import refresh_on_ingestion_datasets, sync_imagery_projection_safely
 from apps.imagery.stac import build_stac_item_from_metadata
@@ -417,31 +414,20 @@ def _copy_asset(source: Path, destination: Path):
     return destination
 
 
-def _warp_preview_north_up(source: Path, destination: Path) -> Path | None:
+def _warp_preview_north_up(source: Path, destination: Path) -> tuple[Path, list[float]] | None:
     """Warp a rotated raster into an axis-aligned EPSG:4326 preview JPEG.
 
     The raster warp runs in the TiTiler subprocess (the main runtime cannot
     import rasterio); this side only decodes the returned array and encodes
     it as a normalized JPEG.
     """
-    python = Path(settings.TITILER_PYTHON)
+    from apps.imagery.warp_runtime import run_warp_payload
+
     script = Path(__file__).resolve().parent.parent / "imagery" / "preview_warper.py"
-    if not python.is_file() or not script.is_file():
+    payload = run_warp_payload(script, {"source": str(source), "max_size": 2400})
+    if payload is None or not payload.get("ok"):
         return None
     try:
-        result = subprocess.run(
-            [str(python), str(script)],
-            input=json.dumps({"source": str(source), "max_size": 2400}),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=300,
-            check=False,
-        )
-        payload = json.loads(result.stdout or "{}")
-        if not payload.get("ok"):
-            return None
         import base64
 
         import numpy as np
@@ -455,17 +441,19 @@ def _warp_preview_north_up(source: Path, destination: Path) -> Path | None:
         low, high = np.percentile(finite, [2, 98])
         normalized = np.clip((array - low) * 255 / max(high - low, 1), 0, 255).astype("uint8")
         Image.fromarray(normalized, mode="L").save(destination, format="JPEG", quality=88, optimize=True)
-        return destination
+        return destination, list(payload["bounds"])
     except Exception:
         return None
 
 
-def generate_preview_image(source: Path, destination: Path) -> Path | None:
+def generate_preview_image(source: Path, destination: Path) -> tuple[Path | None, list[float] | None]:
     """Create a small RGB/JPEG preview from a raster without reading full-size pixels when overviews exist.
 
     Rotated rasters (Umbra spotlight GEC and similar north-east-up products)
     are warped to an axis-aligned EPSG:4326 grid first; without the warp the
     preview bitmap would shear once Leaflet stretches it over the bbox.
+    Returns (preview_path, warp_bounds); warp_bounds is the corrected 4326
+    extent when the raster was warped, else None.
     """
     destination.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -482,7 +470,8 @@ def generate_preview_image(source: Path, destination: Path) -> Path | None:
             if abs(b) / scale > 1e-6 and abs(degrees(atan2(b, a))) > 0.5:
                 warped = _warp_preview_north_up(source, destination)
                 if warped:
-                    return warped
+                    warped_path, warped_bounds = warped
+                    return warped_path, warped_bounds
     except Exception:
         pass
     try:
@@ -512,7 +501,7 @@ def generate_preview_image(source: Path, destination: Path) -> Path | None:
         image = Image.fromarray(normalized, mode="L")
         image.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
         image.save(destination, format="JPEG", quality=88, optimize=True)
-        return destination
+        return destination, None
     except Exception:
         try:
             from PIL import Image
@@ -520,9 +509,9 @@ def generate_preview_image(source: Path, destination: Path) -> Path | None:
             with Image.open(source) as image:
                 image.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
                 image.convert("L").save(destination, format="JPEG", quality=88, optimize=True)
-            return destination
+            return destination, None
         except Exception:
-            return None
+            return None, None
 
 
 def _serializable(value):
@@ -554,8 +543,6 @@ def _asset_specs(group, root: Path, destination: Path, generated_preview: Path |
 
 
 def _reference_object_for_path(job, source: Path):
-    if StorageEndpoint is None:
-        return None
     if job.source_type != IngestionJob.SOURCE_STORAGE_REFERENCE:
         return None
     endpoint_id = (job.source_payload or {}).get("storage_endpoint_id")
@@ -576,15 +563,22 @@ def _index_group_item(item: IngestionItem, group):
     metadata = _parse_group_metadata(group)
     scene_key, identity_hash = build_scene_key(metadata)
     generated_preview = None
+    preview_warp_bounds = None
     preview_policy = "source_preview" if group.preview_path else "generated_preview"
     if not group.preview_path and group.data_path:
-        generated_preview = generate_preview_image(
+        generated_preview, preview_warp_bounds = generate_preview_image(
             Path(group.data_path),
             Path(settings.STAGING_DIR) / "previews" / f"{item.id}.jpg",
         )
         if generated_preview:
             metadata["preview_status"] = "ready"
             metadata["preview_source"] = "generated"
+            if preview_warp_bounds:
+                # The preview bitmap is a north-up warp: its true extent
+                # differs from the raw bbox and the map overlay needs it.
+                # Persist in raw_metadata so STAC rebuilds keep carrying it.
+                metadata.setdefault("raw_metadata", {})["preview_warp_bounds"] = preview_warp_bounds
+                metadata["preview_warp_bounds"] = preview_warp_bounds
     metadata.setdefault("raw_metadata", {})["preview_policy"] = preview_policy
     archive_filename = None
     archive_job_id = None
@@ -653,11 +647,24 @@ def _index_group_item(item: IngestionItem, group):
             asset_hrefs = {}
             asset_paths = {}
             for role, source, target in _asset_specs(group, Path(item.raw_path), destination, generated_preview):
-                # The OSS edition has no storage manager: every asset is copied
-                # into the managed imagery directory.
-                stored_path = _copy_asset(source, target)
+                endpoint_id = (item.job.source_payload or {}).get("storage_endpoint_id") if item.job.source_type == IngestionJob.SOURCE_STORAGE_REFERENCE else None
+                endpoint = StorageEndpoint.objects.filter(pk=endpoint_id).first() if endpoint_id else None
+                referenced_object = None
+                if (not endpoint or endpoint.mode == StorageEndpoint.MODE_REFERENCE) and source != generated_preview:
+                    try:
+                        referenced_object = _reference_object_for_path(item.job, source)
+                    except ValueError:
+                        # Platform-derived assets (generated previews) live in
+                        # staging and are never registered storage objects.
+                        referenced_object = None
+                if referenced_object:
+                    stored_path = source.resolve()
+                    access_mode = ImageryAsset.ACCESS_REFERENCE
+                else:
+                    stored_path = _copy_asset(source, target)
+                    access_mode = ImageryAsset.ACCESS_MANAGED
                 checksum = hashlib.sha256(stored_path.read_bytes()).hexdigest() if stored_path.stat().st_size < 64 * 1024 * 1024 else ""
-                ImageryAsset.objects.create(imagery=record, role=role, name=source.name, path=str(stored_path), access_mode=ImageryAsset.ACCESS_MANAGED, media_type=_media_type(role, source), size_bytes=stored_path.stat().st_size, checksum_sha256=checksum)
+                ImageryAsset.objects.create(imagery=record, role=role, name=source.name, path=str(stored_path), storage_object=referenced_object, access_mode=access_mode, media_type=_media_type(role, source), size_bytes=stored_path.stat().st_size, checksum_sha256=checksum)
                 asset_hrefs[role] = f"/api/imagery/{image_id}/assets/{role}"
                 asset_paths[role] = str(stored_path)
             stac_json = build_stac_item_from_metadata(scene_key=scene_key, image_id=image_id, metadata=metadata, asset_hrefs=asset_hrefs, project_ids=[str(item.job.project_id)] if item.job.project_id else [])
@@ -818,6 +825,7 @@ def _duckdb_record(record, item, metadata, stac_json, asset_paths=None):
         "preview_status": record.preview_status,
         "cog_status": record.cog_status,
         "cog_path": record.cog_path,
+        "asset_access_modes": {asset.role: asset.access_mode for asset in record.assets.all()},
         "footprint_geojson": record.geometry,
         "stac_path": record.stac_path,
         "status": record.status,
