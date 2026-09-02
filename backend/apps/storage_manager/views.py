@@ -20,6 +20,17 @@ class EndpointListCreateView(APIView):
         serializer = StorageEndpointSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         endpoint = serializer.save(created_by=request.user)
+        # Registering a directory is the whole point: scan it right away so
+        # the discovered scenes flow into the catalog automatically (the scan
+        # triggers reference ingestion for every new group on completion).
+        try:
+            create_scan_job(endpoint=endpoint, user=request.user, mode=StorageScanJob.MODE_FULL)
+        except (ValueError, StorageBackendError) as exc:
+            # The endpoint exists but its first scan failed; surface the reason
+            # without failing the registration itself.
+            endpoint.status = StorageEndpoint.STATUS_ERROR
+            endpoint.status_message = str(exc)
+            endpoint.save(update_fields=["status", "status_message", "updated_at"])
         return Response(StorageEndpointSerializer(endpoint).data, status=status.HTTP_201_CREATED)
 
 

@@ -101,24 +101,73 @@ def create_reference_ingestion_job(*, endpoint, user, object_ids, project_id=Non
     if any(obj.missing_confirmed for obj in objects):
         raise ValueError("选择中包含已确认缺失的文件。")
     groups = sorted({obj.scene_group_key for obj in objects if obj.scene_group_key})
+    return _create_group_ingestion_job(endpoint=endpoint, user=user, groups=groups, project_id=project_id)
+
+
+def _ingested_group_keys(endpoint):
+    """Group keys that already have an ingestion item from this endpoint.
+
+    Cross-job deduplication inside ingestion reuses existing imagery, but the
+    item rows still pile up on every rescan; skipping already-registered
+    groups keeps automatic rescans quiet.
+    """
+    from apps.ingestion.models import IngestionItem, IngestionJob
+
+    item_groups = (
+        IngestionItem.objects
+        .filter(
+            job__source_type=IngestionJob.SOURCE_STORAGE_REFERENCE,
+            job__source_payload__storage_endpoint_id=str(endpoint.pk),
+        )
+        .values_list("relative_path", flat=True)
+    )
+    return {str(group) for group in item_groups}
+
+
+def auto_ingest_new_groups(*, endpoint, user, project_id=None):
+    """Create one reference ingestion job for every not-yet-registered group."""
+    candidates = (
+        StorageObject.objects
+        .filter(endpoint=endpoint, missing_confirmed=False)
+        .exclude(scene_group_key="")
+        .order_by("scene_group_key")
+    )
+    group_keys = sorted({obj.scene_group_key for obj in candidates})
     data_groups = set(
-        StorageObject.objects.filter(endpoint=endpoint, scene_group_key__in=groups, scene_role=StorageObject.ROLE_DATA)
+        StorageObject.objects.filter(endpoint=endpoint, scene_group_key__in=group_keys, scene_role=StorageObject.ROLE_DATA)
         .values_list("scene_group_key", flat=True)
     )
     metadata_groups = set(
-        StorageObject.objects.filter(endpoint=endpoint, scene_group_key__in=groups, scene_role=StorageObject.ROLE_METADATA)
+        StorageObject.objects.filter(endpoint=endpoint, scene_group_key__in=group_keys, scene_role=StorageObject.ROLE_METADATA)
         .values_list("scene_group_key", flat=True)
     )
-    groups = [group for group in groups if group in data_groups or group in metadata_groups]
+    ingestible = [key for key in group_keys if key in data_groups or key in metadata_groups]
+    ingestible = [key for key in ingestible if key not in _ingested_group_keys(endpoint)]
+    if not ingestible:
+        return None
+    return _create_group_ingestion_job(endpoint=endpoint, user=user, groups=ingestible, project_id=project_id)
+
+
+def _create_group_ingestion_job(*, endpoint, user, groups, project_id=None):
+    from apps.ingestion.models import IngestionItem, IngestionJob
+    from apps.ingestion.services import get_project_for_user
+
+    if not user.is_staff and not user.is_superuser:
+        raise PermissionError("只有管理员可以从存储源登记影像。")
     if not groups:
-        raise ValueError("选择中没有包含可识别的影像数据或 STAC 元数据。")
+        raise ValueError("没有找到可登记的产品组。")
     project = get_project_for_user(user, project_id)
+    object_ids = list(
+        StorageObject.objects
+        .filter(endpoint=endpoint, scene_group_key__in=groups, missing_confirmed=False)
+        .values_list("pk", flat=True)
+    )
     job = IngestionJob.objects.create(
         created_by=user,
         project=project,
         source_type=IngestionJob.SOURCE_STORAGE_REFERENCE,
         total_count=len(groups),
-        source_payload={"storage_endpoint_id": str(endpoint.pk), "storage_object_ids": [str(obj.pk) for obj in objects]},
+        source_payload={"storage_endpoint_id": str(endpoint.pk), "storage_object_ids": [str(pk) for pk in object_ids]},
     )
     root = validate_local_root(endpoint.root_uri)
     children = []
@@ -211,6 +260,17 @@ def run_scan(job):
         job.save(update_fields=["missing_count", "scenes_found", "status", "finished_at", "checkpoint"])
         endpoint.last_scan_at = job.finished_at
         endpoint.save(update_fields=["last_scan_at", "updated_at"])
+        # A successful scan is the natural moment to register any newly
+        # discovered groups: registering a directory or rescanning it should
+        # end with the scenes in the catalog, not with a manual checkbox step.
+        try:
+            ingestion_job = auto_ingest_new_groups(endpoint=endpoint, user=job.created_by, project_id=None)
+            if ingestion_job is not None:
+                job.checkpoint = {**job.checkpoint, "auto_ingestion_job": str(ingestion_job.pk)}
+                job.save(update_fields=["checkpoint"])
+        except Exception as exc:
+            job.checkpoint = {**job.checkpoint, "auto_ingestion_error": str(exc)[:500]}
+            job.save(update_fields=["checkpoint"])
         return job
     except Exception as exc:
         job.status = StorageScanJob.STATUS_FAILED

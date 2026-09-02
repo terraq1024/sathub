@@ -154,6 +154,36 @@ class StorageManagerTests(TestCase):
         call_command("scan_storage", str(self.endpoint.pk), "--mode", "full", "--username", self.admin.username, stdout=output)
         self.assertTrue(StorageObject.objects.filter(object_key="command.tif").exists())
 
+    def test_full_scan_auto_ingests_new_groups(self):
+        from apps.ingestion.models import IngestionJob, IngestionItem
+        from apps.imagery.models import ImageryRecord
+
+        self.write("scene/AS05_001.tiff", b"a")
+        self.write("scene/AS05_001.jpg", b"b")
+        job = create_scan_job(endpoint=self.endpoint, user=self.admin, mode=StorageScanJob.MODE_FULL)
+
+        self.assertEqual(job.status, StorageScanJob.STATUS_SUCCEEDED)
+        ingestion = IngestionJob.objects.filter(source_type=IngestionJob.SOURCE_STORAGE_REFERENCE).order_by("-id").first()
+        self.assertIsNotNone(ingestion, "a successful scan must auto-create a reference ingestion job")
+        self.assertEqual(ingestion.total_count, 1)
+        self.assertIn("auto_ingestion_job", job.checkpoint)
+
+        # A second scan of the same directory must not enqueue the group again.
+        second = create_scan_job(endpoint=self.endpoint, user=self.admin, mode=StorageScanJob.MODE_FULL)
+        self.assertEqual(second.status, StorageScanJob.STATUS_SUCCEEDED)
+        self.assertEqual(
+            IngestionJob.objects.filter(source_type=IngestionJob.SOURCE_STORAGE_REFERENCE).count(), 1,
+        )
+
+        # New file -> rescan ingests only the new group.
+        self.write("scene/AS05_002.tiff", b"c")
+        third = create_scan_job(endpoint=self.endpoint, user=self.admin, mode=StorageScanJob.MODE_FULL)
+        self.assertEqual(third.status, StorageScanJob.STATUS_SUCCEEDED)
+        latest = IngestionJob.objects.filter(source_type=IngestionJob.SOURCE_STORAGE_REFERENCE).order_by("-id").first()
+        self.assertEqual(latest.total_count, 1)
+        item = IngestionItem.objects.filter(job=latest).first()
+        self.assertEqual(item.relative_path, "scene/AS05_002")
+
     def test_reference_ingestion_creates_job_without_copying_source(self):
         self.write("scene/AS05_JH_JS_003500_E111.4_N24.8_20260407150037_L2_HH_09_001.tiff", b"source")
         self.write("scene/AS05_JH_JS_003500_E111.4_N24.8_20260407150037_L2_HH_09_001.jpg", b"preview")
