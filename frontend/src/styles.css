@@ -1758,6 +1758,33 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* ---------- 系统设置 ---------- */
+
+.settings-page {
+  width: 100%;
+  max-width: 1280px;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.settings-page-title {
+  margin: 0;
+  color: var(--sathub-text-strong);
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.settings-page-desc {
+  margin: 3px 0 0;
+  color: var(--sathub-text-muted);
+  font-size: 12.5px;
+}
+
+.settings-page .ant-tabs-tab {
+  padding-block: 9px;
+  font-weight: 600;
+}
+
 /* ---------- 移动端 ---------- */
 
 @media (max-width: 900px) {
