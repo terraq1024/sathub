@@ -32,6 +32,17 @@ export interface User {
   is_superuser?: boolean;
 }
 
+export interface UserAdmin {
+  id: number;
+  username: string;
+  email: string;
+  is_staff: boolean;
+  is_superuser: boolean;
+  is_active: boolean;
+  date_joined: string;
+  last_login: string | null;
+}
+
 export interface StorageEndpoint {
   id: string;
   name: string;

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Avatar, Dropdown, Layout, Menu, Space, Spin } from 'antd';
-import { CompassOutlined, DatabaseOutlined, DownOutlined, LogoutOutlined, RadarChartOutlined, UserOutlined } from '@ant-design/icons';
+import { CompassOutlined, DatabaseOutlined, DownOutlined, KeyOutlined, LogoutOutlined, RadarChartOutlined, UserOutlined } from '@ant-design/icons';
 import { useLogout, useMe, useProjects } from './api/hooks';
 import { LoginPage } from './features/auth/LoginPage';
+import { ProfileDrawer } from './features/auth/ProfileDrawer';
+import { RegisterPage } from './features/auth/RegisterPage';
 import { DataPage } from './features/imagery/DataPage';
 import { MapPage } from './features/map/MapPage';
 import { normalizeError } from './features/imagery/utils';
@@ -10,8 +12,13 @@ import { normalizeError } from './features/imagery/utils';
 type PageKey = 'data' | 'map';
 const { Header, Content } = Layout;
 
+function isRegisterPath() {
+  return typeof window !== 'undefined' && window.location.pathname === '/register';
+}
+
 function Workspace() {
   const [page, setPage] = useState<PageKey>('data');
+  const [profileOpen, setProfileOpen] = useState(false);
   const me = useMe();
   const logout = useLogout();
   const projectsQuery = useProjects(Boolean(me.data));
@@ -23,6 +30,7 @@ function Workspace() {
   ];
 
   const userMenuItems = [
+    { key: 'profile', icon: <KeyOutlined />, label: '账号设置' },
     { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }
   ];
 
@@ -48,7 +56,7 @@ function Workspace() {
           />
         </div>
         <Space className="header-actions" size={8}>
-          <Dropdown menu={{ items: userMenuItems, onClick: () => logout.mutate() }}>
+          <Dropdown menu={{ items: userMenuItems, onClick: ({ key }) => (key === 'profile' ? setProfileOpen(true) : logout.mutate()) }}>
             <button type="button" className="user-chip" aria-label="账户菜单">
               <Avatar size={26} className="user-avatar" icon={<UserOutlined />} />
               <span className="user-chip-name">{me.data?.username}</span>
@@ -67,11 +75,17 @@ function Workspace() {
         {page === 'data' ? <DataPage projects={projects} projectLoading={projectsQuery.isLoading} currentUser={me.data} /> : null}
         {page === 'map' ? <MapPage projects={projects} projectLoading={projectsQuery.isLoading} /> : null}
       </Content>
+      <ProfileDrawer open={profileOpen} onClose={() => setProfileOpen(false)} />
     </Layout>
   );
 }
 
 export default function App() {
+  // Lightweight path routing: the SPA only has one page plus /register.
+  return isRegisterPath() ? <RegisterPage /> : <AuthenticatedApp />;
+}
+
+function AuthenticatedApp() {
   const me = useMe();
   if (me.isLoading) return <div className="loading-screen"><Spin size="large" /></div>;
   if (me.isError) return <LoginPage />;

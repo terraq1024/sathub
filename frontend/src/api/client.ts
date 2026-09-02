@@ -1,5 +1,6 @@
 import type {
   CreateDatasetPayload,
+  UserAdmin,
   StorageEndpoint,
   StorageObject,
   StorageScanJob,
@@ -109,6 +110,18 @@ export const api = {
   csrf: () => request<{ csrfToken?: string }>('/api/auth/csrf'),
   login: (payload: LoginPayload) => request<User>('/api/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
   logout: () => request<{ detail?: string }>('/api/auth/logout', { method: 'POST' }),
+  register: (payload: { username: string; password: string; email?: string }) =>
+    request<User>('/api/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
+  changePassword: (payload: { current_password?: string; new_password: string }) =>
+    request<{ detail: string }>('/api/auth/password', { method: 'POST', body: JSON.stringify(payload) }),
+  users: () => request<UserAdmin[]>('/api/auth/users'),
+  createUser: (payload: { username: string; password: string; email?: string; is_staff?: boolean }) =>
+    request<UserAdmin>('/api/auth/users', { method: 'POST', body: JSON.stringify(payload) }),
+  updateUser: (id: number, payload: { email?: string; is_staff?: boolean; is_active?: boolean }) =>
+    request<UserAdmin>(`/api/auth/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  deleteUser: (id: number) => request<void>(`/api/auth/users/${id}`, { method: 'DELETE' }),
+  resetUserPassword: (id: number, newPassword: string) =>
+    request<{ detail: string }>(`/api/auth/users/${id}/password`, { method: 'POST', body: JSON.stringify({ new_password: newPassword }) }),
   me: () => request<User>('/api/auth/me'),
   projects: () => request<Project[]>('/api/projects'),
   jobs: () => request<ListResponse<IngestionJob>>('/api/ingestion/jobs'),

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge, Button, Space, Tabs } from 'antd';
-import { CloudUploadOutlined, DatabaseOutlined, FolderOpenOutlined, HddOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, DatabaseOutlined, FolderOpenOutlined, HddOutlined, TeamOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { getListCount, unwrapList, useDatasets, useImagery, useJobs } from '../../api/hooks';
 import type { Project, User } from '../../api/types';
 import { MetricStrip, PageHeader } from '../../components/VisualPrimitives';
@@ -9,6 +9,7 @@ import { ImportDrawer } from '../ingestion/ImportDrawer';
 import { TasksDrawer } from '../ingestion/TasksDrawer';
 import { ImageryCatalog } from './ImageryCatalog';
 import { StoragePanel } from '../storage/StoragePanel';
+import { UsersPanel } from '../auth/UsersPanel';
 
 interface DataPageProps {
   projects: Project[];
@@ -64,7 +65,10 @@ export function DataPage({ projects, projectLoading, currentUser }: DataPageProp
             key: 'storage',
             label: <span><FolderOpenOutlined /> 目录接入</span>,
             children: <StoragePanel />
-          }
+          },
+          ...(currentUser?.is_staff || currentUser?.is_superuser
+            ? [{ key: 'users', label: <span><TeamOutlined /> 用户管理</span>, children: <UsersPanel currentUser={currentUser} /> }]
+            : [])
         ]}
       />
       <ImportDrawer open={importOpen} onClose={() => setImportOpen(false)} projects={projects} projectLoading={projectLoading} />
