@@ -1,5 +1,8 @@
 import type {
   CreateDatasetPayload,
+  StorageEndpoint,
+  StorageObject,
+  StorageScanJob,
   Imagery,
   ImageryBatchPayload,
   ImageryDataset,
@@ -183,6 +186,17 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ imagery_ids: imageryIds })
     }),
+  storageEndpoints: () => request<StorageEndpoint[]>('/api/storage/endpoints'),
+  updateStorageEndpoint: (id: string, payload: Record<string, unknown>) => request<StorageEndpoint>(`/api/storage/endpoints/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  deleteStorageEndpoint: (id: string) => request<void>(`/api/storage/endpoints/${id}`, { method: 'DELETE' }),
+  storageObjects: (endpointId: string) => request<StorageObject[]>(`/api/storage/objects?endpoint=${encodeURIComponent(endpointId)}`),
+  storageObject: (id: string) => request<StorageObject>(`/api/storage/objects/${id}`),
+  createStorageEndpoint: (payload: Record<string, unknown>) => request<StorageEndpoint>('/api/storage/endpoints', { method: 'POST', body: JSON.stringify(payload) }),
+  checkStorageEndpoint: (id: string) => request<StorageScanJob>(`/api/storage/endpoints/${id}/check`, { method: 'POST' }),
+  scanStorageEndpoint: (id: string, payload: { mode?: string; prefix?: string } = {}) => request<StorageScanJob>(`/api/storage/endpoints/${id}/scan`, { method: 'POST', body: JSON.stringify(payload) }),
+  storageScanJobs: () => request<StorageScanJob[]>('/api/storage/scan-jobs'),
+  storageScanJob: (id: string) => request<StorageScanJob>(`/api/storage/scan-jobs/${id}`),
+  ingestStorageObjects: (id: string, payload: { object_ids: string[]; project_id?: string | number }) => request<IngestionJob>(`/api/storage/endpoints/${id}/ingest`, { method: 'POST', body: JSON.stringify(payload) }),
   stacApiUrl: () => `${API_BASE}/api/stac/`
 };
 

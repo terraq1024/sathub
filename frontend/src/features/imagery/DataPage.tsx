@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge, Button, Space, Tabs } from 'antd';
-import { CloudUploadOutlined, DatabaseOutlined, HddOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, DatabaseOutlined, FolderOpenOutlined, HddOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { getListCount, unwrapList, useDatasets, useImagery, useJobs } from '../../api/hooks';
 import type { Project, User } from '../../api/types';
 import { MetricStrip, PageHeader } from '../../components/VisualPrimitives';
@@ -8,6 +8,7 @@ import { DatasetsPanel } from '../datasets/DatasetsPanel';
 import { ImportDrawer } from '../ingestion/ImportDrawer';
 import { TasksDrawer } from '../ingestion/TasksDrawer';
 import { ImageryCatalog } from './ImageryCatalog';
+import { StoragePanel } from '../storage/StoragePanel';
 
 interface DataPageProps {
   projects: Project[];
@@ -58,6 +59,11 @@ export function DataPage({ projects, projectLoading, currentUser }: DataPageProp
             key: 'datasets',
             label: '数据集',
             children: <DatasetsPanel currentUser={currentUser} />
+          },
+          {
+            key: 'storage',
+            label: <span><FolderOpenOutlined /> 目录接入</span>,
+            children: <StoragePanel />
           }
         ]}
       />

@@ -35,6 +35,53 @@ export interface User {
 export interface StorageEndpoint {
   id: string;
   name: string;
+  endpoint_type: 'local_directory' | 'nas_smb' | string;
+  mode: 'reference' | 'managed' | string;
+  root_uri: string;
+  status: string;
+  status_message?: string;
+  enabled: boolean;
+  has_credential?: boolean;
+  last_check_at?: string | null;
+  last_scan_at?: string | null;
+}
+
+export interface StorageScanJob {
+  id: string;
+  endpoint: string;
+  endpoint_name?: string;
+  mode: string;
+  status: string;
+  files_scanned: number;
+  scenes_found: number;
+  new_count: number;
+  changed_count: number;
+  missing_count: number;
+  error_message?: string;
+  prefix?: string;
+  unchanged_count?: number;
+  started_at?: string | null;
+  finished_at?: string | null;
+  created_at?: string;
+}
+
+export interface StorageObject {
+  id: string;
+  endpoint: string;
+  object_key: string;
+  scene_group_key: string;
+  scene_role: string;
+  size_bytes: number;
+  status: string;
+  missing_confirmed: boolean;
+  modified_at?: string;
+  scene_stem?: string;
+  source_metadata?: Record<string, unknown>;
+}
+
+export interface StorageEndpoint {
+  id: string;
+  name: string;
   endpoint_type: 'local_directory' | 'nas_smb' | 's3' | 'sftp' | 'ftp' | string;
   mode: 'reference' | 'managed' | string;
   root_uri: string;

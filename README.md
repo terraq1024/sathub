@@ -11,6 +11,7 @@ ingest -> catalog (STAC) -> search -> preview on map -> organize (datasets)
 ## Features
 
 - **Flexible ingestion** — import from URL lists, ZIP/7Z archives, or whole folders dragged into the browser. Every import runs as an async job with per-item status and retry.
+- **Directory ingestion (reference mode)** — register an existing local or NAS/SMB directory as a storage endpoint, scan it, and ingest scenes **in place without copying**: the platform catalogs the files and serves previews, while the originals stay where they are. Missing files are detected on rescan; two consecutive scans confirm deletion.
 - **Automatic metadata & cataloging** — reads raster metadata (GDAL/rasterio), STAC items, and vendor JSON sidecars (Capella, Umbra, ICEYE); derives footprints, bounds, resolution and acquisition time; writes one STAC Item per scene and a DuckDB search index.
 - **Content deduplication** — SHA-256 identity hashing across users; the same scene uploaded twice is stored once and re-tagged instead.
 - **Catalog search** — combine keyword, satellite, sensor, product level, polarization, time range and facets; draw rectangles or polygons on the map (intersects / contains / within); save queries for reuse.
@@ -27,7 +28,6 @@ This repository is the open edition. The following capabilities are part of the 
 - tile service publishing (XYZ / TileJSON / OGC API Tiles, single-scene and mosaic)
 - online processing (crop, band selection, band math)
 - delivery (data basket, ZIP manifests with checksums, frozen delivery snapshots)
-- storage endpoint scanning (NAS/S3 registration, scheduled scans, reconciliation)
 - configurable metadata parser templates, catalog governance (classifications, tags, administrative regions), audit log, API token auth
 
 The open edition renders imagery inside its own map; it does not expose tile service endpoints.
@@ -80,6 +80,7 @@ Log in with the seeded demo account (`demo` / `demo1234`), open the map, and the
 |---|---|
 | Auth / capabilities | `/api/auth/*`, `/api/auth/capabilities` |
 | Ingestion | `/api/ingestion/jobs/*` |
+| Directory ingestion | `/api/storage/endpoints/*` (register, check, scan, ingest) |
 | Catalog & search | `/api/imagery`, `/api/imagery/map`, `/api/imagery/facets` |
 | Datasets | `/api/imagery/datasets/*` |
 | STAC | `/api/stac/` (core, collections, search) |

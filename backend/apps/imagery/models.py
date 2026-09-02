@@ -139,6 +139,13 @@ class ImageryAsset(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     name = models.CharField(max_length=512)
     path = models.TextField()
+    storage_object = models.ForeignKey(
+        "storage_manager.StorageObject",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="imagery_assets",
+    )
     access_mode = models.CharField(max_length=20, choices=ACCESS_CHOICES, default=ACCESS_MANAGED)
     media_type = models.CharField(max_length=120, blank=True)
     size_bytes = models.BigIntegerField(null=True, blank=True)

@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.ingestion",
     "apps.imagery",
     "apps.stac_api",
+    "apps.storage_manager",
 ]
 
 MIDDLEWARE = [

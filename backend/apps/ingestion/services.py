@@ -17,11 +17,7 @@ from apps.imagery.duckdb_index import upsert_image
 from apps.imagery.metadata import build_scene_key, is_image_file, parse_product_group, scan_product_groups
 from apps.imagery.models import ImageryAsset, ImageryProjectTag, ImageryRecord
 
-try:
-    from apps.storage_manager.models import StorageEndpoint, StorageObject
-except ImportError:  # OSS edition bundles without the storage manager app
-    StorageEndpoint = None
-    StorageObject = None
+from apps.storage_manager.models import StorageEndpoint, StorageObject
 
 from apps.imagery.services import refresh_on_ingestion_datasets, sync_imagery_projection_safely
 from apps.imagery.stac import build_stac_item_from_metadata
@@ -554,8 +550,6 @@ def _asset_specs(group, root: Path, destination: Path, generated_preview: Path |
 
 
 def _reference_object_for_path(job, source: Path):
-    if StorageEndpoint is None:
-        return None
     if job.source_type != IngestionJob.SOURCE_STORAGE_REFERENCE:
         return None
     endpoint_id = (job.source_payload or {}).get("storage_endpoint_id")
@@ -653,11 +647,24 @@ def _index_group_item(item: IngestionItem, group):
             asset_hrefs = {}
             asset_paths = {}
             for role, source, target in _asset_specs(group, Path(item.raw_path), destination, generated_preview):
-                # The OSS edition has no storage manager: every asset is copied
-                # into the managed imagery directory.
-                stored_path = _copy_asset(source, target)
+                endpoint_id = (item.job.source_payload or {}).get("storage_endpoint_id") if item.job.source_type == IngestionJob.SOURCE_STORAGE_REFERENCE else None
+                endpoint = StorageEndpoint.objects.filter(pk=endpoint_id).first() if endpoint_id else None
+                referenced_object = None
+                if (not endpoint or endpoint.mode == StorageEndpoint.MODE_REFERENCE) and source != generated_preview:
+                    try:
+                        referenced_object = _reference_object_for_path(item.job, source)
+                    except ValueError:
+                        # Platform-derived assets (generated previews) live in
+                        # staging and are never registered storage objects.
+                        referenced_object = None
+                if referenced_object:
+                    stored_path = source.resolve()
+                    access_mode = ImageryAsset.ACCESS_REFERENCE
+                else:
+                    stored_path = _copy_asset(source, target)
+                    access_mode = ImageryAsset.ACCESS_MANAGED
                 checksum = hashlib.sha256(stored_path.read_bytes()).hexdigest() if stored_path.stat().st_size < 64 * 1024 * 1024 else ""
-                ImageryAsset.objects.create(imagery=record, role=role, name=source.name, path=str(stored_path), access_mode=ImageryAsset.ACCESS_MANAGED, media_type=_media_type(role, source), size_bytes=stored_path.stat().st_size, checksum_sha256=checksum)
+                ImageryAsset.objects.create(imagery=record, role=role, name=source.name, path=str(stored_path), storage_object=referenced_object, access_mode=access_mode, media_type=_media_type(role, source), size_bytes=stored_path.stat().st_size, checksum_sha256=checksum)
                 asset_hrefs[role] = f"/api/imagery/{image_id}/assets/{role}"
                 asset_paths[role] = str(stored_path)
             stac_json = build_stac_item_from_metadata(scene_key=scene_key, image_id=image_id, metadata=metadata, asset_hrefs=asset_hrefs, project_ids=[str(item.job.project_id)] if item.job.project_id else [])
