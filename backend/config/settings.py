@@ -117,8 +117,12 @@ URL_DOWNLOAD_TIMEOUT = 120
 IMAGERY_DATASET_MAX_MEMBERS = 200
 DERIVED_PREVIEW_DIR = DATA_DIR / "derived-previews"
 
-# Optional: an isolated Python runtime with rasterio, used only to warp
-# rotated rasters into north-up previews. When absent, previews fall back to
-# the tifffile/PIL path and rotated scenes are previewed unwarped.
-TITILER_PYTHON = ROOT_DIR / ".venv-titiler" / "Scripts" / "python.exe"
+# Interpreter used by the preview-warp subprocess (rotated rasters such as
+# Umbra spotlight GEC). Probing order at runtime:
+#   1. this path, if it exists (an isolated venv with rasterio);
+#   2. the current interpreter (the requirements install rasterio).
+# If neither can import rasterio, rotated previews fall back to the
+# unwarped bitmap, which the map overlays with corrected bounds when the
+# warp still succeeds elsewhere.
+TITILER_PYTHON = os.environ.get("SATHUB_WARP_PYTHON", str(ROOT_DIR / ".venv-titiler" / "Scripts" / "python.exe"))
 

@@ -103,6 +103,7 @@ def _metadata_from_record(imagery):
         "spatial_status": imagery.spatial_status,
         "cog_status": imagery.cog_status,
         "cog_path": imagery.cog_path,
+        "preview_warp_bounds": raw_metadata.get("preview_warp_bounds"),
     }
 
 
@@ -194,6 +195,7 @@ def _projection_record(imagery, stac_json):
         "preview_status": imagery.preview_status,
         "cog_status": imagery.cog_status,
         "cog_path": imagery.cog_path,
+        "asset_access_modes": {asset.role: asset.access_mode for asset in imagery.assets.all()},
         "footprint_geojson": imagery.geometry,
         "stac_path": imagery.stac_path,
         "status": imagery.status,

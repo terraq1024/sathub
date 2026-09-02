@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS imagery_index (
     metadata_status VARCHAR,
     preview_status VARCHAR,
     cog_status VARCHAR,
+    asset_access_modes JSON,
     footprint_geojson JSON,
     stac_path VARCHAR,
     status VARCHAR NOT NULL,
@@ -89,7 +90,7 @@ def _ensure_columns(conn, record: dict | None = None):
         "preview_path": "VARCHAR", "imaging_mode": "VARCHAR", "imaging_mode_detail": "VARCHAR",
         "polarizations": "JSON", "resolution_m": "DOUBLE", "pixel_spacing_range_m": "DOUBLE",
         "pixel_spacing_azimuth_m": "DOUBLE", "acquisition_start": "TIMESTAMP", "acquisition_end": "TIMESTAMP",
-        "metadata_status": "VARCHAR", "preview_status": "VARCHAR", "cog_status": "VARCHAR", "footprint_geojson": "JSON", "stac_path": "VARCHAR",
+        "metadata_status": "VARCHAR", "preview_status": "VARCHAR", "cog_status": "VARCHAR", "asset_access_modes": "JSON", "footprint_geojson": "JSON", "stac_path": "VARCHAR",
         "display_name": "VARCHAR", "description": "VARCHAR", "is_archived": "BOOLEAN",
         "archived_at": "TIMESTAMP", "archived_by_id": "VARCHAR",
     }
@@ -111,7 +112,7 @@ def upsert_image(record: dict) -> None:
         "sensor", "imaging_mode", "imaging_mode_detail", "product_level", "polarization", "polarizations", "resolution_m",
         "pixel_spacing_range_m", "pixel_spacing_azimuth_m", "acquisition_time", "acquisition_start", "acquisition_end",
         "center_lon", "center_lat", "min_lon", "min_lat", "max_lon", "max_lat", "epsg", "spatial_status", "metadata_status",
-        "preview_status", "cog_status", "footprint_geojson", "stac_path", "status", "is_archived", "archived_at", "archived_by_id",
+        "preview_status", "cog_status", "asset_access_modes", "footprint_geojson", "stac_path", "status", "is_archived", "archived_at", "archived_by_id",
         "stac_json", "created_at", "updated_at",
     ]
     record.setdefault("source_vendor", _source_vendor(

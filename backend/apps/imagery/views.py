@@ -1,6 +1,7 @@
 from pathlib import Path
 import hashlib
 import json
+import os
 import subprocess
 from math import atan2, degrees as _degrees
 
@@ -312,33 +313,18 @@ def _tiff_rotation_degrees(source: Path) -> float | None:
 def _warp_north_up(source: Path, cache_dir: Path) -> tuple[Path, list[float]] | None:
     """Warp a rotated raster to an axis-aligned EPSG:4326 preview.
 
-    Runs in an isolated Python subprocess with rasterio: the dedicated
-    TiTiler runtime when configured, otherwise the current interpreter
-    (the OSS requirements install rasterio into the main environment).
-    Returns (jpeg_path, 4326 bounds) so the overlay can be placed exactly.
+    Runs in whatever interpreter the warp runtime locates (an isolated
+    rasterio venv when configured, otherwise the current interpreter if it
+    can import rasterio). Returns (jpeg_path, 4326 bounds) so the overlay
+    can be placed exactly.
     """
-    python = Path(settings.TITILER_PYTHON)
-    if not python.is_file():
-        import sys
+    from .warp_runtime import run_warp_payload
 
-        python = Path(sys.executable)
     script = Path(__file__).with_name("preview_warper.py")
-    if not script.is_file():
+    payload = run_warp_payload(script, {"source": str(source), "max_size": 2400})
+    if payload is None or not payload.get("ok"):
         return None
     try:
-        result = subprocess.run(
-            [str(python), str(script)],
-            input=json.dumps({"source": str(source), "max_size": 2400}),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=300,
-            check=False,
-        )
-        payload = json.loads(result.stdout or "{}")
-        if not payload.get("ok"):
-            return None
         import base64
 
         import numpy as np
@@ -426,6 +412,26 @@ def _serve_preview_as_jpeg(asset, source: Path):
         return None, None
 
 
+def _stored_preview_warp_bounds(imagery) -> list[float] | None:
+    """Read sathub:preview_warp_bounds off the record's STAC properties.
+
+    Ingest stores the corrected extent when the generated preview is a
+    north-up warp of a rotated raster.
+    """
+    try:
+        item = None
+        if imagery.stac_path:
+            item = json.loads(Path(imagery.stac_path).read_text(encoding="utf-8"))
+        if not isinstance(item, dict):
+            return None
+        bounds = (item.get("properties") or {}).get("sathub:preview_warp_bounds")
+        if isinstance(bounds, list) and len(bounds) == 4 and all(isinstance(v, (int, float)) for v in bounds):
+            return [float(v) for v in bounds]
+    except (OSError, ValueError, TypeError):
+        pass
+    return None
+
+
 class ImageryAssetView(APIView):
     def get(self, request, image_id, role):
         return self._serve(request, image_id, role)
@@ -469,6 +475,13 @@ class ImageryAssetView(APIView):
             response["Content-Length"] = str(path.stat().st_size)
         except OSError:
             return Response({"detail": "Asset file is missing."}, status=status.HTTP_404_NOT_FOUND)
+        # Ingest-generated previews of rotated rasters are already warped
+        # north-up JPEGs; their corrected extent is stored on the record's
+        # STAC properties and surfaces through the same alignment header.
+        if role == "preview":
+            warp_bounds = _stored_preview_warp_bounds(asset.imagery)
+            if warp_bounds:
+                response["X-Imagery-Preview-Bounds"] = ",".join(f"{value:.7f}" for value in warp_bounds)
         return response
 
 
