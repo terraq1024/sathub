@@ -68,7 +68,7 @@ npm ci
 npm run dev -- --host 127.0.0.1
 ```
 
-Log in with the seeded demo account (`demo` / `demo1234`), open the map, and the three sample scenes are already there with previews. The optional basemap uses Tianditu; set your own token in `frontend/.env` (`VITE_TIANDITU_TOKEN`).
+Log in with the seeded demo account (`demo` / `demo1234`), open the map, and the three sample scenes are already there with previews. Basemaps: Tianditu vector/imagery and Esri World Imagery, switchable from the map corner.
 
 ## Sample data
 
