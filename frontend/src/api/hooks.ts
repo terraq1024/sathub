@@ -40,6 +40,47 @@ export function useLogout() {
   return useMutation({ mutationFn: api.logout, onSuccess: () => queryClient.clear() });
 }
 
+export function useRegister() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.register,
+    onSuccess: (user) => queryClient.setQueryData(['auth', 'me'], user)
+  });
+}
+
+export function useUsers(enabled = true) {
+  return useQuery({ queryKey: ['users'], queryFn: api.users, enabled });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: api.createUser, onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }) });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: { email?: string; is_staff?: boolean; is_active?: boolean } }) =>
+      api.updateUser(id, payload),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] })
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: api.deleteUser, onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }) });
+}
+
+export function useResetUserPassword() {
+  return useMutation({ mutationFn: ({ id, password }: { id: number; password: string }) => api.resetUserPassword(id, password) });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (payload: { current_password?: string; new_password: string }) => api.changePassword(payload)
+  });
+}
+
 export function useProjects(enabled = true) {
   return useQuery({ queryKey: ['projects'], queryFn: api.projects, enabled });
 }
@@ -80,14 +121,14 @@ export function useCreateUrlImport() {
 
 export function useUploadZip() {
   return useIngestionMutation(
-    ({ onProgress, ...payload }: { project_id?: string | number; file: File; onProgress?: (percent: number) => void }) =>
+    ({ onProgress, ...payload }: { project_id?: string | number; file: File; visibility?: string; onProgress?: (percent: number) => void }) =>
       api.uploadArchive(payload, onProgress)
   );
 }
 
 export function useUploadFolder() {
   return useIngestionMutation(
-    ({ onProgress, ...payload }: { project_id?: string | number; files: File[]; relativePaths: string[]; onProgress?: (percent: number) => void }) =>
+    ({ onProgress, ...payload }: { project_id?: string | number; files: File[]; relativePaths: string[]; visibility?: string; onProgress?: (percent: number) => void }) =>
       api.uploadFolder(payload, onProgress)
   );
 }

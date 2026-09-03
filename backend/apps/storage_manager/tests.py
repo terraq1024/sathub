@@ -111,12 +111,24 @@ class StorageManagerTests(TestCase):
         self.assertEqual(failed.status, StorageScanJob.STATUS_FAILED)
         self.assertIn("暂不支持", failed.error_message)
 
-    def test_non_admin_cannot_scan(self):
+    def test_any_user_registers_but_non_owner_cannot_scan(self):
+        # Registration is open to every logged-in user...
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self.client.get("/api/storage/endpoints").status_code, 200)
+        created = self.client.post(
+            "/api/storage/endpoints",
+            {"name": "user-dir", "endpoint_type": "local_directory", "root_uri": str(self.root), "mode": "reference"},
+            content_type="application/json",
+        )
+        self.assertEqual(created.status_code, 201)
+        # ...but an endpoint belongs to its creator: other users cannot scan it.
         with self.assertRaises(PermissionError):
             create_scan_job(endpoint=self.endpoint, user=self.user)
-        self.client.force_authenticate(self.user)
-        self.assertEqual(self.client.get("/api/storage/endpoints").status_code, 403)
-        self.assertEqual(self.client.get("/api/storage/objects").status_code, 403)
+        # And listings only show what the caller owns.
+        listing = self.client.get("/api/storage/endpoints")
+        names = [item["name"] for item in listing.data]
+        self.assertIn("user-dir", names)
+        self.assertNotIn("测试目录", names)
 
     def test_disabled_endpoint_cannot_scan(self):
         self.endpoint.enabled = False

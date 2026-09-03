@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { App, Button, Drawer, Form, Grid, Input, Progress, Segmented, Select, Space, Upload, Typography } from 'antd';
+import { App, Button, Drawer, Form, Grid, Input, Progress, Radio, Segmented, Select, Space, Upload, Typography } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import { FileZipOutlined, FolderOpenOutlined, LinkOutlined, UploadOutlined } from '@ant-design/icons';
 import type { Project } from '../../api/types';
@@ -39,7 +39,7 @@ export function ImportDrawer({ open, onClose, projects, projectLoading }: Import
   const uploadArchive = useUploadZip();
   const uploadFolder = useUploadFolder();
 
-  const submitUrls = async (values: { project_id?: string | number; urls: string }) => {
+  const submitUrls = async (values: { project_id?: string | number; urls: string; visibility?: string }) => {
     try {
       const job = await createUrl.mutateAsync(values);
       message.success(`导入任务 ${job.id} 已创建`);
@@ -56,6 +56,7 @@ export function ImportDrawer({ open, onClose, projects, projectLoading }: Import
       const job = await uploadArchive.mutateAsync({
         project_id: values.project_id,
         file: options.file as File,
+        visibility: values.visibility,
         onProgress: setProgress
       });
       setProgress(100);
@@ -83,6 +84,7 @@ export function ImportDrawer({ open, onClose, projects, projectLoading }: Import
         project_id: values.project_id,
         files,
         relativePaths,
+        visibility: values.visibility,
         onProgress: setProgress
       });
       setProgress(100);
@@ -111,6 +113,12 @@ export function ImportDrawer({ open, onClose, projects, projectLoading }: Import
         {mode === 'url' ? (
           <Form form={urlForm} layout="vertical" requiredMark={false} onFinish={submitUrls}>
             <Form.Item name="project_id" label="项目标签（可选）"><ProjectField projects={projects} loading={projectLoading} /></Form.Item>
+            <Form.Item name="visibility" label="可见范围" initialValue="private" tooltip="私有数据仅自己和管理员可见；公共数据所有用户可见">
+              <Radio.Group optionType="button" buttonStyle="solid">
+                <Radio.Button value="private">私有</Radio.Button>
+                <Radio.Button value="public">公共</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
             <Form.Item
               name="urls"
               label="下载链接"
@@ -123,6 +131,12 @@ export function ImportDrawer({ open, onClose, projects, projectLoading }: Import
         ) : (
           <Form form={uploadForm} layout="vertical" requiredMark={false}>
             <Form.Item name="project_id" label="项目标签（可选）"><ProjectField projects={projects} loading={projectLoading} /></Form.Item>
+            <Form.Item name="visibility" label="可见范围" initialValue="private" tooltip="私有数据仅自己和管理员可见；公共数据所有用户可见">
+              <Radio.Group optionType="button" buttonStyle="solid">
+                <Radio.Button value="private">私有</Radio.Button>
+                <Radio.Button value="public">公共</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
             {mode === 'archive' ? (
               <Dragger
                 accept=".zip,.7z,application/zip,application/x-7z-compressed"

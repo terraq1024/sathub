@@ -29,7 +29,7 @@ class StacApiTests(TestCase):
             id="image-1", scene_key="scene-1", identity_hash="hash-1", stac_id="scene-1", source_name="scene-1.tif",
             platform_code="AS05", satellite_name="AIRSAT-05", sensor="SAR", imaging_mode="STRIPMAP", polarization="HH",
             product_level="L2", acquisition_time=datetime(2024, 6, 1, tzinfo=dt_timezone.utc), bbox=[117, 31, 118, 32], geometry={"type": "Polygon", "coordinates": [[[117,31],[118,31],[118,32],[117,32],[117,31]]]},
-            first_uploaded_by=self.user,
+            first_uploaded_by=self.user, visibility="public",
         )
         preview_path = self.asset_root / "scene.jpg"
         preview_path.write_bytes(b"preview-bytes")
@@ -57,7 +57,7 @@ class StacApiTests(TestCase):
 
         fallback = ImageryRecord.objects.create(
             id="image-2", scene_key="scene-2", identity_hash="hash-2", stac_id="scene-2", source_name="scene-2.tif",
-            acquisition_time=self.image.acquisition_time, first_uploaded_by=self.user,
+            acquisition_time=self.image.acquisition_time, first_uploaded_by=self.user, visibility="public",
         )
         response = self.client.get("/api/stac/search", {"datetime": "2024-01-01T00:00:00Z/2024-12-31T23:59:59Z"})
         self.assertEqual(response.data["numberMatched"], 2)
@@ -68,7 +68,7 @@ class StacApiTests(TestCase):
             ImageryRecord.objects.create(
                 id=f"image-{index}", scene_key=f"scene-{index}", identity_hash=f"hash-{index}", stac_id=f"scene-{index}",
                 source_name=f"scene-{index}.tif", acquisition_time=self.image.acquisition_time,
-                first_uploaded_by=self.user,
+                first_uploaded_by=self.user, visibility="public",
             )
         response = self.client.get("/api/stac/search", {"limit": "2"})
         self.assertEqual(response.data["numberMatched"], 4)

@@ -27,7 +27,7 @@ This repository is the open edition. The following capabilities are part of the 
 
 - tile service publishing (XYZ / TileJSON / OGC API Tiles, single-scene and mosaic)
 - online processing (crop, band selection, band math)
-- delivery (data basket, ZIP manifests with checksums, frozen delivery snapshots)
+- export packaging (data basket, ZIP manifests with checksums, snapshot versioning)
 - configurable metadata parser templates, catalog governance (classifications, tags, administrative regions), audit log, API token auth
 
 The open edition renders imagery inside its own map; it does not expose tile service endpoints.

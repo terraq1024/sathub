@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS imagery_index (
     metadata_status VARCHAR,
     preview_status VARCHAR,
     cog_status VARCHAR,
+    visibility VARCHAR,
     asset_access_modes JSON,
     footprint_geojson JSON,
     stac_path VARCHAR,
@@ -90,7 +91,7 @@ def _ensure_columns(conn, record: dict | None = None):
         "preview_path": "VARCHAR", "imaging_mode": "VARCHAR", "imaging_mode_detail": "VARCHAR",
         "polarizations": "JSON", "resolution_m": "DOUBLE", "pixel_spacing_range_m": "DOUBLE",
         "pixel_spacing_azimuth_m": "DOUBLE", "acquisition_start": "TIMESTAMP", "acquisition_end": "TIMESTAMP",
-        "metadata_status": "VARCHAR", "preview_status": "VARCHAR", "cog_status": "VARCHAR", "asset_access_modes": "JSON", "footprint_geojson": "JSON", "stac_path": "VARCHAR",
+        "metadata_status": "VARCHAR", "preview_status": "VARCHAR", "cog_status": "VARCHAR", "visibility": "VARCHAR", "asset_access_modes": "JSON", "footprint_geojson": "JSON", "stac_path": "VARCHAR",
         "display_name": "VARCHAR", "description": "VARCHAR", "is_archived": "BOOLEAN",
         "archived_at": "TIMESTAMP", "archived_by_id": "VARCHAR",
     }
@@ -112,7 +113,7 @@ def upsert_image(record: dict) -> None:
         "sensor", "imaging_mode", "imaging_mode_detail", "product_level", "polarization", "polarizations", "resolution_m",
         "pixel_spacing_range_m", "pixel_spacing_azimuth_m", "acquisition_time", "acquisition_start", "acquisition_end",
         "center_lon", "center_lat", "min_lon", "min_lat", "max_lon", "max_lat", "epsg", "spatial_status", "metadata_status",
-        "preview_status", "cog_status", "asset_access_modes", "footprint_geojson", "stac_path", "status", "is_archived", "archived_at", "archived_by_id",
+        "preview_status", "cog_status", "visibility", "asset_access_modes", "footprint_geojson", "stac_path", "status", "is_archived", "archived_at", "archived_by_id",
         "stac_json", "created_at", "updated_at",
     ]
     record.setdefault("source_vendor", _source_vendor(
@@ -150,6 +151,13 @@ def search_images(*, user, filters: dict, page: int = 1, page_size: int = 50) ->
             params.append(str(user.pk))
     else:
         clauses.append("COALESCE(is_archived, FALSE) = FALSE")
+    # Visibility: public imagery for everyone; private only for its owner
+    # and staff.
+    if user.is_staff:
+        pass
+    else:
+        clauses.append("(COALESCE(visibility, 'public') = 'public' OR owner_id = ?)")
+        params.append(str(user.pk))
     exact_fields = ["platform", "source_vendor", "satellite_name", "sensor", "imaging_mode", "product_level", "polarization", "metadata_status", "preview_status", "cog_status"]
     for key in exact_fields:
         if filters.get(key):
@@ -298,6 +306,9 @@ def get_image(*, user, image_id: str, include_archived: bool = False) -> dict | 
             params.append(str(user.pk))
         else:
             archived_clause = " AND COALESCE(is_archived, FALSE) = FALSE"
+        if not user.is_staff:
+            archived_clause += " AND (COALESCE(visibility, 'public') = 'public' OR owner_id = ?)"
+            params.append(str(user.pk))
         cursor = conn.execute(f"SELECT * FROM imagery_index WHERE image_id = ?{archived_clause}", params)
         row = cursor.fetchone()
         if not row:

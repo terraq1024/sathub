@@ -5,16 +5,30 @@ from rest_framework.views import APIView
 
 from .models import StorageEndpoint, StorageObject, StorageScanJob
 from .backends import StorageBackendError
-from .permissions import IsStorageAdmin
+from .permissions import IsStorageUser
 from .serializers import StorageEndpointSerializer, StorageObjectSerializer, StorageScanJobSerializer, StorageReferenceIngestionSerializer
 from .services import create_reference_ingestion_job, create_scan_job
 
 
+def _visible_endpoint_or_404(endpoint_id, user):
+    from django.shortcuts import get_object_or_404
+
+    endpoint = get_object_or_404(StorageEndpoint, pk=endpoint_id)
+    if not (user.is_staff or user.is_superuser or str(endpoint.created_by_id) == str(user.pk)):
+        from rest_framework.exceptions import PermissionDenied
+
+        raise PermissionDenied("只有存储源的创建者和管理员可以访问。")
+    return endpoint
+
+
 class EndpointListCreateView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def get(self, request):
-        return Response(StorageEndpointSerializer(StorageEndpoint.objects.all(), many=True).data)
+        queryset = StorageEndpoint.objects.all()
+        if not (request.user.is_staff or request.user.is_superuser):
+            queryset = queryset.filter(created_by=request.user)
+        return Response(StorageEndpointSerializer(queryset, many=True).data)
 
     def post(self, request):
         serializer = StorageEndpointSerializer(data=request.data)
@@ -35,10 +49,10 @@ class EndpointListCreateView(APIView):
 
 
 class EndpointDetailView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def get_object(self, endpoint_id):
-        return get_object_or_404(StorageEndpoint, pk=endpoint_id)
+        return _visible_endpoint_or_404(endpoint_id, self.request.user)
 
     def get(self, request, endpoint_id):
         return Response(StorageEndpointSerializer(self.get_object(endpoint_id)).data)
@@ -58,10 +72,10 @@ class EndpointDetailView(APIView):
 
 
 class EndpointCheckView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def post(self, request, endpoint_id):
-        endpoint = get_object_or_404(StorageEndpoint, pk=endpoint_id)
+        endpoint = _visible_endpoint_or_404(endpoint_id, request.user)
         try:
             job = create_scan_job(endpoint=endpoint, user=request.user, mode=StorageScanJob.MODE_HEALTH_CHECK)
         except (ValueError, PermissionError, StorageBackendError) as exc:
@@ -70,10 +84,10 @@ class EndpointCheckView(APIView):
 
 
 class EndpointScanView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def post(self, request, endpoint_id):
-        endpoint = get_object_or_404(StorageEndpoint, pk=endpoint_id)
+        endpoint = _visible_endpoint_or_404(endpoint_id, request.user)
         mode = request.data.get("mode", StorageScanJob.MODE_INCREMENTAL)
         prefix = request.data.get("prefix", "")
         try:
@@ -84,10 +98,10 @@ class EndpointScanView(APIView):
 
 
 class EndpointIngestView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def post(self, request, endpoint_id):
-        endpoint = get_object_or_404(StorageEndpoint, pk=endpoint_id)
+        endpoint = _visible_endpoint_or_404(endpoint_id, request.user)
         serializer = StorageReferenceIngestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -98,6 +112,7 @@ class EndpointIngestView(APIView):
                 user=request.user,
                 object_ids=serializer.validated_data["object_ids"],
                 project_id=serializer.validated_data.get("project_id"),
+                visibility=request.data.get("visibility", "private"),
             )
         except (ValueError, PermissionError, StorageBackendError) as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
@@ -105,10 +120,12 @@ class EndpointIngestView(APIView):
 
 
 class ScanJobListView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def get(self, request):
         queryset = StorageScanJob.objects.select_related("endpoint", "created_by")
+        if not (request.user.is_staff or request.user.is_superuser):
+            queryset = queryset.filter(endpoint__created_by=request.user)
         endpoint_id = request.query_params.get("endpoint")
         if endpoint_id:
             queryset = queryset.filter(endpoint_id=endpoint_id)
@@ -116,7 +133,7 @@ class ScanJobListView(APIView):
 
 
 class ScanJobDetailView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def get(self, request, job_id):
         job = get_object_or_404(StorageScanJob.objects.select_related("endpoint", "created_by"), pk=job_id)
@@ -124,10 +141,12 @@ class ScanJobDetailView(APIView):
 
 
 class ObjectListView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def get(self, request):
         queryset = StorageObject.objects.select_related("endpoint", "last_seen_scan")
+        if not (request.user.is_staff or request.user.is_superuser):
+            queryset = queryset.filter(endpoint__created_by=request.user)
         if request.query_params.get("endpoint"):
             queryset = queryset.filter(endpoint_id=request.query_params["endpoint"])
         if request.query_params.get("status"):
@@ -138,7 +157,7 @@ class ObjectListView(APIView):
 
 
 class ObjectDetailView(APIView):
-    permission_classes = [IsStorageAdmin]
+    permission_classes = [IsStorageUser]
 
     def get(self, request, object_id):
         obj = get_object_or_404(StorageObject.objects.select_related("endpoint", "last_seen_scan"), pk=object_id)

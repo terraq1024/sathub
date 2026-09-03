@@ -1,5 +1,6 @@
 import type {
   CreateDatasetPayload,
+  UserAdmin,
   StorageEndpoint,
   StorageObject,
   StorageScanJob,
@@ -109,6 +110,18 @@ export const api = {
   csrf: () => request<{ csrfToken?: string }>('/api/auth/csrf'),
   login: (payload: LoginPayload) => request<User>('/api/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
   logout: () => request<{ detail?: string }>('/api/auth/logout', { method: 'POST' }),
+  register: (payload: { username: string; password: string; email?: string }) =>
+    request<User>('/api/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
+  changePassword: (payload: { current_password?: string; new_password: string }) =>
+    request<{ detail: string }>('/api/auth/password', { method: 'POST', body: JSON.stringify(payload) }),
+  users: () => request<UserAdmin[]>('/api/auth/users'),
+  createUser: (payload: { username: string; password: string; email?: string; is_staff?: boolean }) =>
+    request<UserAdmin>('/api/auth/users', { method: 'POST', body: JSON.stringify(payload) }),
+  updateUser: (id: number, payload: { email?: string; is_staff?: boolean; is_active?: boolean }) =>
+    request<UserAdmin>(`/api/auth/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  deleteUser: (id: number) => request<void>(`/api/auth/users/${id}`, { method: 'DELETE' }),
+  resetUserPassword: (id: number, newPassword: string) =>
+    request<{ detail: string }>(`/api/auth/users/${id}/password`, { method: 'POST', body: JSON.stringify({ new_password: newPassword }) }),
   me: () => request<User>('/api/auth/me'),
   projects: () => request<Project[]>('/api/projects'),
   jobs: () => request<ListResponse<IngestionJob>>('/api/ingestion/jobs'),
@@ -119,25 +132,27 @@ export const api = {
   jobItems: (jobId: string | number) => request<ListResponse<IngestionItem>>(`/api/ingestion/jobs/${jobId}/items`),
   retryItem: (itemId: string | number) =>
     request<IngestionItem>(`/api/ingestion/items/${itemId}/retry`, { method: 'POST' }),
-  createUrlImport: (payload: { project_id?: string | number; urls: string }) =>
+  createUrlImport: (payload: { project_id?: string | number; urls: string; visibility?: string }) =>
     request<IngestionJob>('/api/ingestion/jobs/url-import', { method: 'POST', body: JSON.stringify(payload) }),
   uploadArchive: async (
-    payload: { project_id?: string | number; file: File },
+    payload: { project_id?: string | number; file: File; visibility?: string },
     onProgress?: (percent: number) => void
   ) => {
     const archiveCheck = await api.checkArchive(payload.file.name);
     if (archiveCheck.exists) throw new ApiError(409, `压缩包已存在：${archiveCheck.filename}`, archiveCheck);
     const formData = new FormData();
     if (payload.project_id !== undefined) formData.set('project_id', String(payload.project_id));
+    if (payload.visibility) formData.set('visibility', payload.visibility);
     formData.set('file', payload.file);
     return xhrUpload('/api/ingestion/jobs/upload-archive', formData, '压缩包上传失败', onProgress);
   },
   uploadFolder: (
-    payload: { project_id?: string | number; files: File[]; relativePaths: string[] },
+    payload: { project_id?: string | number; files: File[]; relativePaths: string[]; visibility?: string },
     onProgress?: (percent: number) => void
   ) => {
     const formData = new FormData();
     if (payload.project_id !== undefined) formData.set('project_id', String(payload.project_id));
+    if (payload.visibility) formData.set('visibility', payload.visibility);
     payload.files.forEach((file, index) => {
       formData.append('files', file);
       formData.append('relative_paths', payload.relativePaths[index]);
@@ -197,7 +212,7 @@ export const api = {
   scanStorageEndpoint: (id: string, payload: { mode?: string; prefix?: string } = {}) => request<StorageScanJob>(`/api/storage/endpoints/${id}/scan`, { method: 'POST', body: JSON.stringify(payload) }),
   storageScanJobs: () => request<StorageScanJob[]>('/api/storage/scan-jobs'),
   storageScanJob: (id: string) => request<StorageScanJob>(`/api/storage/scan-jobs/${id}`),
-  ingestStorageObjects: (id: string, payload: { object_ids: string[]; project_id?: string | number }) => request<IngestionJob>(`/api/storage/endpoints/${id}/ingest`, { method: 'POST', body: JSON.stringify(payload) }),
+  ingestStorageObjects: (id: string, payload: { object_ids: string[]; project_id?: string | number; visibility?: string }) => request<IngestionJob>(`/api/storage/endpoints/${id}/ingest`, { method: 'POST', body: JSON.stringify(payload) }),
   stacApiUrl: () => `${API_BASE}/api/stac/`
 };
 

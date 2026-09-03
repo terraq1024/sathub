@@ -322,6 +322,67 @@ class ImageryRemovalTests(ImageryApiTestBase):
         self.assertEqual(dataset.members.count(), 0)
 
 
+class VisibilityTests(ImageryApiTestBase):
+    def _set_visibility(self, imagery, visibility):
+        from apps.imagery.models import ImageryRecord
+        from apps.imagery.services import sync_imagery_projection
+
+        ImageryRecord.objects.filter(pk=imagery.pk).update(visibility=visibility)
+        sync_imagery_projection(imagery.pk)
+
+    def test_private_imagery_hidden_from_others_but_visible_to_owner_and_staff(self):
+        from apps.imagery.models import ImageryRecord
+
+        mine = self.create_imagery("mine")
+        self._set_visibility(mine, "private")
+
+        # Owner sees it.
+        self.assertEqual(self.client.get("/api/imagery/").data["count"], 1)
+        # Other users do not.
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get("/api/imagery/").data["count"], 0)
+        self.assertEqual(self.client.get("/api/imagery/map").data["count"], 0)
+        self.assertEqual(self.client.get(f"/api/imagery/{mine.pk}").status_code, 404)
+        # Staff sees everything.
+        self.client.force_authenticate(self.staff)
+        self.assertEqual(self.client.get("/api/imagery/").data["count"], 1)
+
+    def test_public_imagery_visible_to_everyone(self):
+        from apps.imagery.models import ImageryRecord
+
+        shared = self.create_imagery("shared")
+        self._set_visibility(shared, "public")
+        for user in (self.owner, self.other, self.staff):
+            self.client.force_authenticate(user)
+            self.assertEqual(self.client.get("/api/imagery/").data["count"], 1)
+
+    def test_owner_can_toggle_visibility_via_detail_and_batch(self):
+        from apps.imagery.models import ImageryRecord
+
+        record = self.create_imagery("toggle-me")
+        self.assertEqual(
+            self.client.patch(f"/api/imagery/{record.pk}", {"visibility": "public"}, format="json").status_code,
+            200,
+        )
+        self.assertEqual(ImageryRecord.objects.get(pk=record.pk).visibility, "public")
+
+        response = self.client.post(
+            "/api/imagery/batch",
+            {"action": "set_visibility", "imagery_ids": [record.pk], "visibility": "private"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ImageryRecord.objects.get(pk=record.pk).visibility, "private")
+
+    def test_non_owner_cannot_toggle_visibility(self):
+        record = self.create_imagery("locked")
+        self.client.force_authenticate(self.other)
+        self.assertEqual(
+            self.client.patch(f"/api/imagery/{record.pk}", {"visibility": "public"}, format="json").status_code,
+            403,
+        )
+
+
 class ImageryDatasetApiTests(ImageryApiTestBase):
     def setUp(self):
         super().setUp()

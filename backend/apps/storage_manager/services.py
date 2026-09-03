@@ -73,9 +73,16 @@ def _scope_filter(queryset, prefix):
     return queryset
 
 
+def _ensure_endpoint_access(endpoint, user):
+    """Storage endpoints are owner-scoped: the creator and staff only."""
+    if user.is_staff or user.is_superuser:
+        return
+    if str(endpoint.created_by_id) != str(user.pk):
+        raise PermissionError("只有存储源的创建者和管理员可以执行此操作。")
+
+
 def create_scan_job(*, endpoint, user, mode=StorageScanJob.MODE_INCREMENTAL, prefix=""):
-    if not user.is_staff and not user.is_superuser:
-        raise PermissionError("只有管理员可以扫描存储源。")
+    _ensure_endpoint_access(endpoint, user)
     if not endpoint.enabled:
         raise ValueError("存储源已禁用，不能发起扫描。")
     prefix = validate_prefix(prefix)
@@ -85,10 +92,9 @@ def create_scan_job(*, endpoint, user, mode=StorageScanJob.MODE_INCREMENTAL, pre
     return run_scan(job)
 
 
-def create_reference_ingestion_job(*, endpoint, user, object_ids, project_id=None):
+def create_reference_ingestion_job(*, endpoint, user, object_ids, project_id=None, visibility="private"):
     """Create an ingestion job that reads product groups in-place from a local/NAS endpoint."""
-    if not user.is_staff and not user.is_superuser:
-        raise PermissionError("只有管理员可以从存储源登记影像。")
+    _ensure_endpoint_access(endpoint, user)
     from apps.ingestion.models import IngestionItem, IngestionJob
     from apps.ingestion.services import get_project_for_user
 
@@ -96,12 +102,14 @@ def create_reference_ingestion_job(*, endpoint, user, object_ids, project_id=Non
         StorageObject.objects.filter(endpoint=endpoint, id__in=list(dict.fromkeys(object_ids)))
         .order_by("scene_group_key", "object_key")
     )
+    if visibility not in {"public", "private"}:
+        visibility = "private"
     if not objects:
         raise ValueError("没有找到可登记的存储对象。")
     if any(obj.missing_confirmed for obj in objects):
         raise ValueError("选择中包含已确认缺失的文件。")
     groups = sorted({obj.scene_group_key for obj in objects if obj.scene_group_key})
-    return _create_group_ingestion_job(endpoint=endpoint, user=user, groups=groups, project_id=project_id)
+    return _create_group_ingestion_job(endpoint=endpoint, user=user, groups=groups, project_id=project_id, visibility=visibility)
 
 
 def _ingested_group_keys(endpoint):
@@ -145,15 +153,16 @@ def auto_ingest_new_groups(*, endpoint, user, project_id=None):
     ingestible = [key for key in ingestible if key not in _ingested_group_keys(endpoint)]
     if not ingestible:
         return None
-    return _create_group_ingestion_job(endpoint=endpoint, user=user, groups=ingestible, project_id=project_id)
+    return _create_group_ingestion_job(endpoint=endpoint, user=user, groups=ingestible, project_id=project_id, visibility="private")
 
 
-def _create_group_ingestion_job(*, endpoint, user, groups, project_id=None):
+def _create_group_ingestion_job(*, endpoint, user, groups, project_id=None, visibility="private"):
     from apps.ingestion.models import IngestionItem, IngestionJob
     from apps.ingestion.services import get_project_for_user
 
-    if not user.is_staff and not user.is_superuser:
-        raise PermissionError("只有管理员可以从存储源登记影像。")
+    _ensure_endpoint_access(endpoint, user)
+    if visibility not in {"public", "private"}:
+        visibility = "private"
     if not groups:
         raise ValueError("没有找到可登记的产品组。")
     project = get_project_for_user(user, project_id)
@@ -167,7 +176,7 @@ def _create_group_ingestion_job(*, endpoint, user, groups, project_id=None):
         project=project,
         source_type=IngestionJob.SOURCE_STORAGE_REFERENCE,
         total_count=len(groups),
-        source_payload={"storage_endpoint_id": str(endpoint.pk), "storage_object_ids": [str(pk) for pk in object_ids]},
+        source_payload={"storage_endpoint_id": str(endpoint.pk), "storage_object_ids": [str(pk) for pk in object_ids], "visibility": visibility},
     )
     root = validate_local_root(endpoint.root_uri)
     children = []

@@ -67,6 +67,7 @@ export function ImageryCatalog({ projects, projectLoading, currentUser }: Imager
     { title: '级别', dataIndex: 'product_level', width: 72, render: (value) => value || '-' },
     { title: '极化', dataIndex: 'polarization', width: 72, render: (value) => value || '-' },
     { title: '分辨率', dataIndex: 'resolution_m', width: 90, render: (value) => value !== undefined ? `${value} m` : '-' },
+    { title: '可见', dataIndex: 'visibility', width: 64, render: (value) => <Tag color={value === 'public' ? 'blue' : 'default'}>{value === 'public' ? '公共' : '私有'}</Tag> },
     { title: '状态', dataIndex: 'is_archived', width: 80, render: (value) => <StatusTag status={value ? 'archived' : 'ready'} /> },
     {
       title: '拍摄时间', dataIndex: 'acquisition_time', width: 150,

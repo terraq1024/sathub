@@ -1,13 +1,13 @@
 import { Alert, App, Button, Form, Input, Typography } from 'antd';
-import { DatabaseOutlined, GlobalOutlined, LockOutlined, RadarChartOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, GlobalOutlined, LockOutlined, RadarChartOutlined, UserOutlined } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { useLogin } from '../../api/hooks';
 import { normalizeError } from '../imagery/utils';
 
 const brandPoints = [
-  { icon: <DatabaseOutlined />, title: '汇聚接入', text: '本地、NAS 与链接数据统一登记入库' },
-  { icon: <GlobalOutlined />, title: '检索与地图', text: '目录、空间查询和 JPG 快速预览' },
-  { icon: <SafetyCertificateOutlined />, title: '服务与交付', text: 'XYZ/STAC 服务、审计和冻结交付' }
+  { icon: <DatabaseOutlined />, title: '汇聚接入', text: '本地目录、NAS 与链接数据统一登记入库' },
+  { icon: <GlobalOutlined />, title: '检索与地图', text: '目录查询、空间检索和快速预览' },
+  { icon: <RadarChartOutlined />, title: '数据资产', text: '数据集与项目标签，沉淀你的影像库' }
 ];
 
 export function LoginPage() {
@@ -37,7 +37,7 @@ export function LoginPage() {
         <div className="login-brand-hero">
           <Typography.Title level={2} className="login-brand-headline">统一接入、检索与服务</Typography.Title>
           <Typography.Paragraph className="login-brand-desc">
-            面向内部研发、售前与交付团队的遥感影像工作台，从数据汇聚到在线服务与交付冻结的全流程管理。
+            把散落在硬盘与目录中的卫星影像接入统一平台，完成从汇聚、编目到检索与预览的全流程管理。
           </Typography.Paragraph>
         </div>
         <ul className="login-brand-points">
@@ -53,7 +53,7 @@ export function LoginPage() {
         </ul>
         <div className="login-brand-footer">
           <GlobalOutlined />
-          <Typography.Text>内网工作区 · 仅限授权用户访问</Typography.Text>
+          <Typography.Text>SatHub · 开源影像平台</Typography.Text>
         </div>
       </div>
       <div className="login-form-pane">
@@ -71,6 +71,10 @@ export function LoginPage() {
             </Form.Item>
             {login.isError ? <Alert type="error" showIcon message={normalizeError(login.error)} /> : null}
             <Button type="primary" htmlType="submit" loading={login.isPending} block>登录</Button>
+            <div style={{ marginTop: 14, textAlign: 'center' }}>
+              <Typography.Text type="secondary">还没有账号？</Typography.Text>
+              <Typography.Link href="/register">注册一个</Typography.Link>
+            </div>
           </Form>
         </section>
       </div>

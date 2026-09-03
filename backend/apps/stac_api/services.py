@@ -160,7 +160,10 @@ def search_records(request, params):
         if key not in allowed or not isinstance(expression, dict) or set(expression) != {"eq"}:
             raise ValueError("query supports only eq for known metadata fields")
         filters[key] = expression["eq"]
+    request_user = getattr(request, "user", None)
     qs = ImageryRecord.objects.filter(is_archived=False).prefetch_related("assets", "project_tags")
+    if not (request_user and request_user.is_authenticated and (request_user.is_staff or request_user.is_superuser)):
+        qs = qs.filter(visibility=ImageryRecord.VISIBILITY_PUBLIC)
     if ids:
         qs = qs.filter(stac_id__in=ids) | qs.filter(scene_key__in=ids)
     for key, value in filters.items():

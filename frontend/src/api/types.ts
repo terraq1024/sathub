@@ -32,6 +32,17 @@ export interface User {
   is_superuser?: boolean;
 }
 
+export interface UserAdmin {
+  id: number;
+  username: string;
+  email: string;
+  is_staff: boolean;
+  is_superuser: boolean;
+  is_active: boolean;
+  date_joined: string;
+  last_login: string | null;
+}
+
 export interface StorageEndpoint {
   id: string;
   name: string;
@@ -357,6 +368,7 @@ export interface Imagery {
   metadata_status?: string;
   preview_status?: string;
   asset_access_modes?: Record<string, string>;
+  visibility?: 'public' | 'private';
   cog_status?: string;
   cog_error?: string;
   cog_updated_at?: string | null;
@@ -378,10 +390,11 @@ export interface UpdateImageryPayload {
   project_ids?: Array<string | number>;
 }
 
-export type ImageryBatchAction = 'archive' | 'restore' | 'add_project' | 'remove_project';
+export type ImageryBatchAction = 'archive' | 'restore' | 'add_project' | 'remove_project' | 'set_visibility';
 
 export interface ImageryBatchPayload {
   action: ImageryBatchAction;
+  visibility?: 'public' | 'private';
   imagery_ids: string[];
   project_id?: string | number;
 }

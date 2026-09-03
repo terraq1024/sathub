@@ -63,6 +63,7 @@ export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser }:
     form.setFieldsValue({
       display_name: imagery.display_name,
       description: imagery.description,
+      visibility: imagery.visibility ?? 'private',
       project_ids: imagery.project_ids ?? imagery.projects?.map((project) => project.id) ?? []
     });
   }, [form, imagery]);
@@ -177,6 +178,9 @@ export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser }:
             <Form form={form} layout="vertical" requiredMark={false}>
               <Form.Item name="display_name" label="显示名称"><Input maxLength={255} placeholder={imagery.source_name} /></Form.Item>
               <Form.Item name="description" label="备注"><Input.TextArea rows={4} maxLength={1000} showCount /></Form.Item>
+              <Form.Item name="visibility" label="可见范围" tooltip="私有仅自己和管理员可见；公共所有用户可见">
+                <Select options={[{ value: 'private', label: '私有' }, { value: 'public', label: '公共' }]} />
+              </Form.Item>
               <Form.Item name="project_ids" label="项目标签">
                 <Select mode="multiple" allowClear options={projects.map((project) => ({ value: project.id, label: project.name }))} />
               </Form.Item>
@@ -198,6 +202,7 @@ export function ImageryDetailDrawer({ imageId, onClose, projects, currentUser }:
                   <Tag color={imagery.is_archived ? 'default' : 'success'}>{imagery.is_archived ? '已归档' : '可用'}</Tag>
                   <Tag>{imagery.metadata_status ?? '元数据未知'}</Tag>
                   <Tag>{imagery.preview_status === 'ready' ? '有预览' : '无预览'}</Tag>
+                  <Tag color={imagery.visibility === 'public' ? 'blue' : 'default'}>{imagery.visibility === 'public' ? '公共' : '私有'}</Tag>
                 </Space>
               </Descriptions.Item>
               {imagery.description ? <Descriptions.Item label="备注">{imagery.description}</Descriptions.Item> : null}

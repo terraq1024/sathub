@@ -72,3 +72,4 @@ class StorageScanJobSerializer(serializers.ModelSerializer):
 class StorageReferenceIngestionSerializer(serializers.Serializer):
     object_ids = serializers.ListField(child=serializers.UUIDField(), allow_empty=False, max_length=200)
     project_id = serializers.IntegerField(required=False, allow_null=True)
+    visibility = serializers.ChoiceField(choices=["public", "private"], default="private")
