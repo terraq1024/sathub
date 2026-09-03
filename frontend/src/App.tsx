@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Avatar, Dropdown, Layout, Menu, Space, Spin } from 'antd';
-import { CompassOutlined, DatabaseOutlined, DownOutlined, KeyOutlined, LogoutOutlined, RadarChartOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { CompassOutlined, DatabaseOutlined, DownOutlined, KeyOutlined, LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 import { useLogout, useMe, useProjects } from './api/hooks';
 import { LoginPage } from './features/auth/LoginPage';
 import { ProfileDrawer } from './features/auth/ProfileDrawer';
 import { RegisterPage } from './features/auth/RegisterPage';
+import { SatHubMark } from './components/SatHubMark';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { DataPage } from './features/imagery/DataPage';
 import { MapPage } from './features/map/MapPage';
@@ -41,7 +42,7 @@ function Workspace() {
       <Header className="app-header">
         <div className="top-navigation">
           <div className="brand">
-            <span className="brand-mark"><RadarChartOutlined /></span>
+            <span className="brand-mark"><SatHubMark size={20} /></span>
             <span className="brand-copy">
               <span className="brand-name">SatHub</span>
               <span className="brand-sub">Imagery Hub</span>
