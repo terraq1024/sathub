@@ -45,14 +45,14 @@ def get_project_for_user(user, project_id):
 
 
 @transaction.atomic
-def create_url_import_job(*, user, project_id, urls: list[str]) -> IngestionJob:
+def create_url_import_job(*, user, project_id, urls: list[str], visibility: str = "private") -> IngestionJob:
     project = get_project_for_user(user, project_id)
     job = IngestionJob.objects.create(
         created_by=user,
         project=project,
         source_type=IngestionJob.SOURCE_URL_TEXT,
         total_count=len(urls),
-        source_payload={"urls": urls},
+        source_payload={"urls": urls, "visibility": visibility},
     )
     IngestionItem.objects.bulk_create([
         IngestionItem(job=job, source=url, source_kind=IngestionItem.SOURCE_URL)
@@ -62,7 +62,7 @@ def create_url_import_job(*, user, project_id, urls: list[str]) -> IngestionJob:
 
 
 @transaction.atomic
-def create_archive_upload_job(*, user, project_id, uploaded_file) -> IngestionJob:
+def create_archive_upload_job(*, user, project_id, uploaded_file, visibility: str = "private") -> IngestionJob:
     project = get_project_for_user(user, project_id)
     safe_name = Path(uploaded_file.name).name
     if not safe_name.lower().endswith((".zip", ".7z")):
@@ -72,7 +72,7 @@ def create_archive_upload_job(*, user, project_id, uploaded_file) -> IngestionJo
         project=project,
         source_type=IngestionJob.SOURCE_ZIP_UPLOAD if safe_name.lower().endswith(".zip") else IngestionJob.SOURCE_ARCHIVE_UPLOAD,
         total_count=0,
-        source_payload={"filename": safe_name},
+        source_payload={"filename": safe_name, "visibility": visibility},
     )
     staging_dir = Path(settings.STAGING_DIR) / str(job.id)
     staging_dir.mkdir(parents=True, exist_ok=True)
@@ -98,13 +98,13 @@ create_zip_upload_job = create_archive_upload_job
 
 
 @transaction.atomic
-def create_folder_upload_job(*, user, project_id, files, relative_paths) -> IngestionJob:
+def create_folder_upload_job(*, user, project_id, files, relative_paths, visibility: str = "private") -> IngestionJob:
     project = get_project_for_user(user, project_id)
     job = IngestionJob.objects.create(
         created_by=user,
         project=project,
         source_type=IngestionJob.SOURCE_FOLDER_UPLOAD,
-        source_payload={"file_count": len(files)},
+        source_payload={"file_count": len(files), "visibility": visibility},
     )
     folder_dir = Path(settings.STAGING_DIR) / str(job.id) / "folder"
     folder_dir.mkdir(parents=True, exist_ok=True)
@@ -597,11 +597,15 @@ def _index_group_item(item: IngestionItem, group):
         return
 
     image_id = uuid.uuid4().hex
+    job_visibility = (item.job.source_payload or {}).get("visibility") or "private"
+    if job_visibility not in {"public", "private"}:
+        job_visibility = "private"
     try:
         with transaction.atomic():
             record = ImageryRecord.objects.create(
                 id=image_id,
                 scene_key=scene_key,
+                visibility=job_visibility,
                 identity_hash=identity_hash,
                 stac_id=scene_key,
                 source_name=metadata["source_name"],
@@ -825,6 +829,7 @@ def _duckdb_record(record, item, metadata, stac_json, asset_paths=None):
         "preview_status": record.preview_status,
         "cog_status": record.cog_status,
         "cog_path": record.cog_path,
+        "visibility": record.visibility,
         "asset_access_modes": {asset.role: asset.access_mode for asset in record.assets.all()},
         "footprint_geojson": record.geometry,
         "stac_path": record.stac_path,

@@ -79,6 +79,13 @@ class ImageryRecord(models.Model):
         related_name="first_uploaded_imagery",
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PARTIAL)
+    VISIBILITY_PUBLIC = "public"
+    VISIBILITY_PRIVATE = "private"
+    VISIBILITY_CHOICES = [
+        (VISIBILITY_PUBLIC, "Public"),
+        (VISIBILITY_PRIVATE, "Private"),
+    ]
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default=VISIBILITY_PRIVATE, db_index=True)
     is_archived = models.BooleanField(default=False, db_index=True)
     archived_at = models.DateTimeField(null=True, blank=True)
     archived_by = models.ForeignKey(
@@ -109,6 +116,13 @@ class ImageryRecord(models.Model):
 
     def can_manage(self, user):
         return bool(user and user.is_authenticated and (user.is_staff or user.pk == self.first_uploaded_by_id))
+
+    def can_view(self, user):
+        """Public imagery is visible to every logged-in user; private
+        imagery only to its owner and staff."""
+        if self.visibility == self.VISIBILITY_PUBLIC:
+            return True
+        return self.can_manage(user)
 
 
 class ImageryAsset(models.Model):
@@ -182,6 +196,12 @@ class ImageryDataset(models.Model):
         (STATUS_ACTIVE, "Active"),
         (STATUS_ARCHIVED, "Archived"),
     ]
+    VISIBILITY_PUBLIC = "public"
+    VISIBILITY_PRIVATE = "private"
+    VISIBILITY_CHOICES = [
+        (VISIBILITY_PUBLIC, "Public"),
+        (VISIBILITY_PRIVATE, "Private"),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
@@ -191,6 +211,7 @@ class ImageryDataset(models.Model):
     refresh_mode = models.CharField(max_length=20, choices=REFRESH_CHOICES, default=REFRESH_MANUAL)
     last_refreshed_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE, db_index=True)
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default=VISIBILITY_PRIVATE, db_index=True)
     revision = models.PositiveIntegerField(default=1)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

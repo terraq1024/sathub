@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { App, Button, Form, Input, Modal, Select, Space, Typography } from 'antd';
-import { ClearOutlined, FolderAddOutlined, PlusOutlined } from '@ant-design/icons';
+import { ClearOutlined, EyeOutlined, EyeInvisibleOutlined, FolderAddOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   unwrapList,
   useAddDatasetMembers,
   useCreateDataset,
   useDatasets
 } from '../../api/hooks';
+import { useBatchImagery } from '../../api/hooks';
 import { normalizeError } from './utils';
 
 type Dialog = 'add' | 'create';
@@ -24,6 +25,20 @@ export function SelectionActions({ selectedIds, onClear }: SelectionActionsProps
   const createDataset = useCreateDataset();
   const addMembers = useAddDatasetMembers();
   const pending = createDataset.isPending || addMembers.isPending;
+  const batchImagery = useBatchImagery();
+  const [visibilityTarget, setVisibilityTarget] = useState<'public' | 'private'>();
+
+  const toggleVisibility = async () => {
+    if (!visibilityTarget) return;
+    try {
+      await batchImagery.mutateAsync({ action: 'set_visibility', imagery_ids: selectedIds, visibility: visibilityTarget });
+      message.success(visibilityTarget === 'public' ? '已设为公共数据' : '已设为私有数据');
+      setVisibilityTarget(undefined);
+      onClear();
+    } catch (error) {
+      if (error instanceof Error) message.error(normalizeError(error));
+    }
+  };
 
   if (!selectedIds.length) return null;
 
@@ -73,6 +88,8 @@ export function SelectionActions({ selectedIds, onClear }: SelectionActionsProps
         <Space size={4} wrap>
           <Button icon={<FolderAddOutlined />} onClick={() => setDialog('add')}>加入数据集</Button>
           <Button icon={<PlusOutlined />} onClick={() => setDialog('create')}>创建数据集</Button>
+          <Button icon={<EyeOutlined />} onClick={() => setVisibilityTarget('public')}>设为公共</Button>
+          <Button icon={<EyeInvisibleOutlined />} onClick={() => setVisibilityTarget('private')}>设为私有</Button>
           <Button icon={<ClearOutlined />} onClick={onClear}>清空</Button>
         </Space>
       </div>
@@ -99,6 +116,20 @@ export function SelectionActions({ selectedIds, onClear }: SelectionActionsProps
             </>
           ) : null}
         </Form>
+      </Modal>
+      <Modal
+        title={visibilityTarget === 'public' ? '设为公共数据？' : '设为私有数据？'}
+        open={Boolean(visibilityTarget)}
+        okText={visibilityTarget === 'public' ? '设为公共' : '设为私有'}
+        cancelText="取消"
+        okButtonProps={visibilityTarget === 'public' ? undefined : { danger: true }}
+        confirmLoading={batchImagery.isPending}
+        onOk={() => void toggleVisibility()}
+        onCancel={() => setVisibilityTarget(undefined)}
+      >
+        {visibilityTarget === 'public'
+          ? `将把 ${selectedIds.length} 景影像对全部用户可见，确定？`
+          : `将把 ${selectedIds.length} 景影像设为仅自己和管理员可见，确定？`}
       </Modal>
     </>
   );

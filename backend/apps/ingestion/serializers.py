@@ -4,6 +4,7 @@ from .models import IngestionItem, IngestionJob
 
 
 class UrlImportSerializer(serializers.Serializer):
+    visibility = serializers.ChoiceField(choices=[("public", "Public"), ("private", "Private")], default="private")
     project_id = serializers.IntegerField(required=False, allow_null=True)
     urls = serializers.CharField()
 
@@ -15,6 +16,7 @@ class UrlImportSerializer(serializers.Serializer):
 
 
 class ZipUploadSerializer(serializers.Serializer):
+    visibility = serializers.ChoiceField(choices=[("public", "Public"), ("private", "Private")], default="private")
     project_id = serializers.IntegerField(required=False, allow_null=True)
     file = serializers.FileField()
 
@@ -35,6 +37,7 @@ class ArchiveCheckSerializer(serializers.Serializer):
 
 
 class FolderUploadSerializer(serializers.Serializer):
+    visibility = serializers.ChoiceField(choices=[("public", "Public"), ("private", "Private")], default="private")
     project_id = serializers.IntegerField(required=False, allow_null=True)
     files = serializers.ListField(child=serializers.FileField(), allow_empty=False)
     relative_paths = serializers.ListField(child=serializers.CharField(), allow_empty=False)

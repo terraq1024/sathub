@@ -29,6 +29,7 @@ class UrlImportView(APIView):
                 user=request.user,
                 project_id=serializer.validated_data.get("project_id"),
                 urls=serializer.validated_data["urls"],
+                visibility=serializer.validated_data.get("visibility", "private"),
             )
         except ValueError as exc:
             raise DRFValidationError(str(exc)) from exc
@@ -59,6 +60,7 @@ class ZipUploadView(APIView):
                 user=request.user,
                 project_id=serializer.validated_data.get("project_id"),
                 uploaded_file=serializer.validated_data["file"],
+                visibility=serializer.validated_data.get("visibility", "private"),
             )
         except ValueError as exc:
             raise DRFValidationError(str(exc)) from exc
@@ -96,6 +98,7 @@ class FolderUploadView(APIView):
                 project_id=serializer.validated_data.get("project_id"),
                 files=serializer.validated_data["files"],
                 relative_paths=serializer.validated_data["relative_paths"],
+                visibility=serializer.validated_data.get("visibility", "private"),
             )
         except ValueError as exc:
             raise DRFValidationError(str(exc)) from exc

@@ -149,7 +149,7 @@ class ImageryDetailView(APIView):
                 raise ValidationError("Restore archived imagery before editing it.")
             data = serializer.validated_data
             update_fields = []
-            for field in ("display_name", "description"):
+            for field in ("display_name", "description", "visibility"):
                 if field in data:
                     setattr(imagery, field, data[field])
                     update_fields.append(field)
@@ -263,6 +263,11 @@ class ImageryBatchView(APIView):
                     ImageryProjectTag(imagery=record, project_id=data["project_id"])
                     for record in records
                 ], ignore_conflicts=True)
+            elif action == ImageryBatchSerializer.ACTION_SET_VISIBILITY:
+                ImageryRecord.objects.filter(pk__in=image_ids).update(
+                    visibility=data["visibility"],
+                    updated_at=timezone.now(),
+                )
             else:
                 ImageryProjectTag.objects.filter(imagery_id__in=image_ids, project_id=data["project_id"]).delete()
         failed_sync_ids = [image_id for image_id in image_ids if not sync_imagery_projection_safely(image_id)]

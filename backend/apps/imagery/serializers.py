@@ -107,6 +107,7 @@ class ImageryRecordSerializer(serializers.ModelSerializer):
 class ImageryUpdateSerializer(serializers.Serializer):
     display_name = serializers.CharField(required=False, allow_blank=True, max_length=512, trim_whitespace=True)
     description = serializers.CharField(required=False, allow_blank=True, trim_whitespace=True)
+    visibility = serializers.ChoiceField(choices=["public", "private"], required=False)
     project_ids = serializers.ListField(
         child=serializers.IntegerField(min_value=1),
         required=False,
@@ -128,14 +129,21 @@ class ImageryBatchSerializer(serializers.Serializer):
     ACTION_RESTORE = "restore"
     ACTION_ADD_PROJECT = "add_project"
     ACTION_REMOVE_PROJECT = "remove_project"
+    ACTION_SET_VISIBILITY = "set_visibility"
 
-    action = serializers.ChoiceField(choices=[ACTION_ARCHIVE, ACTION_RESTORE, ACTION_ADD_PROJECT, ACTION_REMOVE_PROJECT])
+    action = serializers.ChoiceField(choices=[ACTION_ARCHIVE, ACTION_RESTORE, ACTION_ADD_PROJECT, ACTION_REMOVE_PROJECT, ACTION_SET_VISIBILITY])
     imagery_ids = serializers.ListField(
         child=serializers.CharField(max_length=64),
         allow_empty=False,
         max_length=200,
     )
     project_id = serializers.IntegerField(required=False, min_value=1)
+    visibility = serializers.ChoiceField(choices=["public", "private"], required=False)
+
+    def validate(self, attrs):
+        if attrs.get("action") == self.ACTION_SET_VISIBILITY and not attrs.get("visibility"):
+            raise serializers.ValidationError({"visibility": "切换可见性时必须指定 visibility。"})
+        return attrs
 
     def validate_imagery_ids(self, value):
         if len(value) != len(set(value)):

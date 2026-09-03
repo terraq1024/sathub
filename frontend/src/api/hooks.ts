@@ -121,14 +121,14 @@ export function useCreateUrlImport() {
 
 export function useUploadZip() {
   return useIngestionMutation(
-    ({ onProgress, ...payload }: { project_id?: string | number; file: File; onProgress?: (percent: number) => void }) =>
+    ({ onProgress, ...payload }: { project_id?: string | number; file: File; visibility?: string; onProgress?: (percent: number) => void }) =>
       api.uploadArchive(payload, onProgress)
   );
 }
 
 export function useUploadFolder() {
   return useIngestionMutation(
-    ({ onProgress, ...payload }: { project_id?: string | number; files: File[]; relativePaths: string[]; onProgress?: (percent: number) => void }) =>
+    ({ onProgress, ...payload }: { project_id?: string | number; files: File[]; relativePaths: string[]; visibility?: string; onProgress?: (percent: number) => void }) =>
       api.uploadFolder(payload, onProgress)
   );
 }

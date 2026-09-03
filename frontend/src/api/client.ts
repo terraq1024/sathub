@@ -132,25 +132,27 @@ export const api = {
   jobItems: (jobId: string | number) => request<ListResponse<IngestionItem>>(`/api/ingestion/jobs/${jobId}/items`),
   retryItem: (itemId: string | number) =>
     request<IngestionItem>(`/api/ingestion/items/${itemId}/retry`, { method: 'POST' }),
-  createUrlImport: (payload: { project_id?: string | number; urls: string }) =>
+  createUrlImport: (payload: { project_id?: string | number; urls: string; visibility?: string }) =>
     request<IngestionJob>('/api/ingestion/jobs/url-import', { method: 'POST', body: JSON.stringify(payload) }),
   uploadArchive: async (
-    payload: { project_id?: string | number; file: File },
+    payload: { project_id?: string | number; file: File; visibility?: string },
     onProgress?: (percent: number) => void
   ) => {
     const archiveCheck = await api.checkArchive(payload.file.name);
     if (archiveCheck.exists) throw new ApiError(409, `压缩包已存在：${archiveCheck.filename}`, archiveCheck);
     const formData = new FormData();
     if (payload.project_id !== undefined) formData.set('project_id', String(payload.project_id));
+    if (payload.visibility) formData.set('visibility', payload.visibility);
     formData.set('file', payload.file);
     return xhrUpload('/api/ingestion/jobs/upload-archive', formData, '压缩包上传失败', onProgress);
   },
   uploadFolder: (
-    payload: { project_id?: string | number; files: File[]; relativePaths: string[] },
+    payload: { project_id?: string | number; files: File[]; relativePaths: string[]; visibility?: string },
     onProgress?: (percent: number) => void
   ) => {
     const formData = new FormData();
     if (payload.project_id !== undefined) formData.set('project_id', String(payload.project_id));
+    if (payload.visibility) formData.set('visibility', payload.visibility);
     payload.files.forEach((file, index) => {
       formData.append('files', file);
       formData.append('relative_paths', payload.relativePaths[index]);
@@ -210,7 +212,7 @@ export const api = {
   scanStorageEndpoint: (id: string, payload: { mode?: string; prefix?: string } = {}) => request<StorageScanJob>(`/api/storage/endpoints/${id}/scan`, { method: 'POST', body: JSON.stringify(payload) }),
   storageScanJobs: () => request<StorageScanJob[]>('/api/storage/scan-jobs'),
   storageScanJob: (id: string) => request<StorageScanJob>(`/api/storage/scan-jobs/${id}`),
-  ingestStorageObjects: (id: string, payload: { object_ids: string[]; project_id?: string | number }) => request<IngestionJob>(`/api/storage/endpoints/${id}/ingest`, { method: 'POST', body: JSON.stringify(payload) }),
+  ingestStorageObjects: (id: string, payload: { object_ids: string[]; project_id?: string | number; visibility?: string }) => request<IngestionJob>(`/api/storage/endpoints/${id}/ingest`, { method: 'POST', body: JSON.stringify(payload) }),
   stacApiUrl: () => `${API_BASE}/api/stac/`
 };
 
