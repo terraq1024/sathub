@@ -1,13 +1,14 @@
 import { Alert, App, Button, Form, Input, Typography } from 'antd';
-import { DatabaseOutlined, GlobalOutlined, LockOutlined, RadarChartOutlined, UserOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, GlobalOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { useLogin } from '../../api/hooks';
 import { normalizeError } from '../imagery/utils';
+import { SatHubMark } from '../../components/SatHubMark';
 
 const brandPoints = [
   { icon: <DatabaseOutlined />, title: '汇聚接入', text: '本地目录、NAS 与链接数据统一登记入库' },
   { icon: <GlobalOutlined />, title: '检索与地图', text: '目录查询、空间检索和快速预览' },
-  { icon: <RadarChartOutlined />, title: '数据资产', text: '数据集与项目标签，沉淀你的影像库' }
+  { icon: <DatabaseOutlined />, title: '数据资产', text: '数据集与项目标签，沉淀你的影像库' }
 ];
 
 export function LoginPage() {
@@ -28,7 +29,7 @@ export function LoginPage() {
     <div className="login-screen">
       <div className="login-brand-pane">
         <div className="login-brand-top">
-          <span className="brand-mark brand-mark-lg"><RadarChartOutlined /></span>
+          <span className="brand-mark brand-mark-lg"><SatHubMark size={27} /></span>
           <div>
             <Typography.Title level={3} className="login-brand-title">SatHub</Typography.Title>
             <Typography.Text className="login-brand-subtitle">卫星影像管理平台</Typography.Text>

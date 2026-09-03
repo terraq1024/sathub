@@ -1,8 +1,9 @@
 import { App, Button, Form, Input, Typography } from 'antd';
-import { GlobalOutlined, LinkOutlined, RadarChartOutlined, UserOutlined } from '@ant-design/icons';
+import { GlobalOutlined, LinkOutlined, UserOutlined } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { useRegister } from '../../api/hooks';
 import { normalizeError } from '../imagery/utils';
+import { SatHubMark } from '../../components/SatHubMark';
 
 const brandPoints = [
   { title: '开放注册', text: '注册即可开始汇聚你的卫星影像' },
@@ -28,7 +29,7 @@ export function RegisterPage() {
     <div className="login-screen">
       <div className="login-brand-pane">
         <div className="login-brand-top">
-          <span className="brand-mark brand-mark-lg"><RadarChartOutlined /></span>
+          <span className="brand-mark brand-mark-lg"><SatHubMark size={27} /></span>
           <div>
             <Typography.Title level={3} className="login-brand-title">SatHub</Typography.Title>
             <Typography.Text className="login-brand-subtitle">卫星影像管理平台</Typography.Text>
