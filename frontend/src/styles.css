@@ -415,11 +415,11 @@ body {
 .user-chip-role {
   padding: 1px 7px;
   border-radius: 9999px;
-  border: 1px solid var(--sathub-text-strong);
-  background: var(--sathub-surface);
-  color: var(--sathub-text-strong);
+  border: 1px solid var(--sathub-border);
+  background: var(--sathub-surface-muted);
+  color: var(--sathub-text-secondary);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 510;
 }
 
 .user-chip-arrow {
