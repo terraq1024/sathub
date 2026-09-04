@@ -44,7 +44,14 @@ export function useRegister() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.register,
-    onSuccess: (user) => queryClient.setQueryData(['auth', 'me'], user)
+    onSuccess: (user) => {
+      // Seeding the cache is not enough: the outer App's useMe observer
+      // sits in an error state and will not refetch on a cache write.
+      // Invalidate so every mounted me-query (including App's) refetches
+      // against the fresh registration session.
+      queryClient.setQueryData(['auth', 'me'], user);
+      void queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    }
   });
 }
 

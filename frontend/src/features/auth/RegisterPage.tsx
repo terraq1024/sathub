@@ -20,6 +20,10 @@ export function RegisterPage() {
       await api.csrf();
       await register.mutateAsync({ username: values.username, password: values.password, email: values.email });
       message.success('注册成功');
+      // The registration endpoint sets the session cookie; a full reload
+      // guarantees the app boots against it instead of relying on query
+      // cache propagation across the login/register boundary.
+      window.location.href = '/';
     } catch (error) {
       message.error(normalizeError(error));
     }
