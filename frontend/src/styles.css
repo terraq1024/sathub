@@ -1,6 +1,8 @@
 /*
- * SatHub 商务浅色主题（FRONTEND_THEME_GUIDE.md）
- * 设计原则：白面板 + 冷蓝主色 + 紧凑密度 + 轻阴影层级。
+ * SkyFi 风格主题 v2（dembrandt 抓取令牌 · app.skyfi.com）
+ * 设计原则：白底主导（#fafafa 画布 + #ffffff 面板 + 奶白 #f5efe8），
+ * 黑色实心块作 CTA 与选中态，金黄 #fedf84 仅作点缀（描边/选中 0.4 透明度），
+ * 文字 zinc 层级。黑白对比是结构语言，不是全黑铺开。
  */
 
 * {
@@ -8,30 +10,33 @@
 }
 
 :root {
-  --sathub-canvas: #f0f3f8;
+  --sathub-canvas: #fafafa;
   --sathub-surface: #ffffff;
-  --sathub-surface-muted: #f6f8fc;
-  --sathub-border: #dce4f0;
-  --sathub-border-soft: #e8edf5;
-  --sathub-text: #24324a;
-  --sathub-text-strong: #1d2b45;
-  --sathub-text-muted: #5d6b82;
-  --sathub-primary: #3f6ff2;
-  --sathub-primary-deep: #2f5fe0;
-  --sathub-primary-bg: #eef3fe;
-  --sathub-primary-hover: #9eb4ff;
-  --sathub-success: #18a999;
-  --sathub-success-bg: #e9f8f5;
-  --sathub-warning: #d9942f;
-  --sathub-warning-bg: #fdf3e4;
-  --sathub-danger: #d95d5d;
-  --sathub-danger-bg: #fdeeee;
-  --sathub-info-bg: #e9f2fe;
-  --sathub-muted-bg: #f1f4f9;
-  --sathub-shadow-sm: 0 1px 2px rgba(23, 43, 84, 0.04), 0 4px 14px rgba(23, 43, 84, 0.06);
-  --sathub-shadow-md: 0 2px 6px rgba(23, 43, 84, 0.06), 0 12px 32px rgba(23, 43, 84, 0.1);
-  --sathub-radius: 6px;
-  --sathub-radius-lg: 8px;
+  --sathub-surface-muted: #f4f4f5;
+  --sathub-border: #e4e4e7;
+  --sathub-border-soft: #f0f0f2;
+  --sathub-text: #18181b;
+  --sathub-text-strong: #09090b;
+  --sathub-text-muted: #52525b;
+  --sathub-primary: #09090b;
+  --sathub-primary-deep: #000000;
+  --sathub-primary-bg: rgba(254, 223, 132, 0.16);
+  --sathub-primary-hover: #3f3f46;
+  --sathub-accent: #fedf84;
+  --sathub-accent-deep: #eaa71b;
+  --sathub-accent-soft: rgba(254, 223, 132, 0.4);
+  --sathub-success: #16a34a;
+  --sathub-success-bg: rgba(22, 163, 74, 0.1);
+  --sathub-warning: #eaa71b;
+  --sathub-warning-bg: rgba(234, 167, 27, 0.12);
+  --sathub-danger: #dc2626;
+  --sathub-danger-bg: rgba(220, 38, 38, 0.08);
+  --sathub-info-bg: rgba(66, 153, 225, 0.1);
+  --sathub-muted-bg: #f4f4f5;
+  --sathub-shadow-sm: rgba(9, 9, 11, 0.08) 0px 1px 2px 0px, rgba(9, 9, 11, 0.04) 0px 0px 0px 1px;
+  --sathub-shadow-md: rgba(9, 9, 11, 0.12) 0px 8px 24px 0px;
+  --sathub-radius: 8px;
+  --sathub-radius-lg: 10px;
 }
 
 html,
@@ -75,7 +80,7 @@ body {
   grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
 }
 
-/* 左侧品牌叙事栏：深海军蓝，只此一处使用深色底 */
+/* 左侧品牌叙事栏：黑色壳层（SkyFi 黑框），金黄点缀 */
 .login-brand-pane {
   position: relative;
   display: flex;
@@ -84,8 +89,8 @@ body {
   gap: 28px;
   padding: 48px 56px;
   overflow: hidden;
-  background: linear-gradient(160deg, #16264a 0%, #1c3568 55%, #234080 100%);
-  color: #e8eefb;
+  background: #09090b;
+  color: #e4e4e7;
 }
 
 .login-brand-pane::before {
@@ -93,8 +98,8 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(720px 420px at 85% -10%, rgba(90, 140, 255, 0.28), transparent 62%),
-    radial-gradient(560px 380px at -8% 108%, rgba(63, 111, 242, 0.22), transparent 60%);
+    radial-gradient(720px 420px at 85% -10%, rgba(254, 223, 132, 0.08), transparent 62%),
+    radial-gradient(560px 380px at -8% 108%, rgba(254, 223, 132, 0.05), transparent 60%);
   pointer-events: none;
 }
 
@@ -115,8 +120,8 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: var(--sathub-primary-bg);
-  color: var(--sathub-primary);
+  background: var(--sathub-text-strong);
+  color: #ffffff;
   font-size: 20px;
 }
 
@@ -124,25 +129,31 @@ body {
   width: 52px;
   height: 52px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--sathub-text-strong);
   color: #ffffff;
   font-size: 27px;
   backdrop-filter: blur(4px);
 }
 
+/* antd v5 Typography.Title 只带 .ant-typography 类，双类选择器优先级高于单类，需 !important 覆盖 */
 .login-brand-title {
   margin: 0;
-  color: #ffffff;
+  color: #fafafa !important;
   font-size: 24px;
   line-height: 1.15;
 }
 
-.login-brand-pane .ant-typography-title {
-  color: #ffffff !important;
+.login-brand-pane .ant-typography {
+  color: #a1a1aa;
+}
+
+.login-brand-pane .login-brand-title,
+.login-brand-pane .login-brand-headline {
+  color: #fafafa !important;
 }
 
 .login-brand-subtitle {
-  color: #b8c7e6 !important;
+  color: #a1a1aa !important;
   font-size: 13px;
 }
 
@@ -154,7 +165,7 @@ body {
 .login-brand-headline {
   max-width: 13em;
   margin: 0 0 14px;
-  color: #ffffff;
+  color: #fafafa !important;
   font-size: 34px;
   line-height: 1.3;
   letter-spacing: 0.01em;
@@ -163,7 +174,7 @@ body {
 .login-brand-desc {
   max-width: 34em;
   margin: 0;
-  color: #b9c8e8;
+  color: #a1a1aa !important;
   font-size: 14px;
   line-height: 1.8;
 }
@@ -190,20 +201,20 @@ body {
   height: 34px;
   margin-top: 1px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #dce6ff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
   font-size: 16px;
 }
 
 .login-brand-point-title {
   display: block;
-  color: #ffffff;
+  color: #fafafa;
   font-size: 14px;
 }
 
 .login-brand-point-text {
   display: block;
-  color: #a9bade;
+  color: #a1a1aa;
   font-size: 12.5px;
   line-height: 1.6;
 }
@@ -212,12 +223,12 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #93a6cc;
+  color: #a1a1aa;
   font-size: 12px;
 }
 
 .login-brand-footer .ant-typography {
-  color: #93a6cc;
+  color: #a1a1aa;
 }
 
 /* 右侧登录卡 */
@@ -261,6 +272,7 @@ body {
   min-height: 0;
 }
 
+/* 黑色壳层顶栏：SkyFi 黑框白内容的核心标识 */
 .app-header {
   height: 60px;
   min-height: 60px;
@@ -269,9 +281,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid var(--sathub-border-soft);
-  background: var(--sathub-surface);
-  box-shadow: 0 1px 3px rgba(23, 43, 84, 0.04);
+  border-bottom: 1px solid #1f1f23;
+  background: #09090b;
   z-index: 700;
 }
 
@@ -298,14 +309,14 @@ body {
 }
 
 .brand-name {
-  color: var(--sathub-text-strong);
+  color: #fafafa;
   font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
 .brand-sub {
-  color: var(--sathub-text-muted);
+  color: #a1a1aa;
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -315,7 +326,7 @@ body {
   flex: 0 0 auto;
   width: 1px;
   height: 24px;
-  background: var(--sathub-border);
+  background: #27272a;
 }
 
 .top-menu {
@@ -335,7 +346,7 @@ body {
 .top-menu .ant-menu-item {
   margin-inline: 2px;
   padding-inline: 14px;
-  color: var(--sathub-text-muted);
+  color: #a1a1aa;
   font-size: 14px;
   font-weight: 500;
   transition: color 160ms ease, background-color 160ms ease;
@@ -345,15 +356,16 @@ body {
   display: none;
 }
 
+/* 黑壳顶栏菜单：悬停变亮，选中为金色胶囊（黑底上的金色点缀） */
 .top-menu .ant-menu-item:hover {
-  color: var(--sathub-primary);
-  background: var(--sathub-primary-bg);
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 6px !important;
 }
 
 .top-menu .ant-menu-item-selected {
-  color: var(--sathub-primary-deep) !important;
-  background: var(--sathub-primary-bg) !important;
+  color: #09090b !important;
+  background: var(--sathub-surface-muted) !important;
   border-radius: 6px !important;
   font-weight: 600;
 }
@@ -362,44 +374,45 @@ body {
   min-width: 0;
 }
 
+/* 黑壳顶栏上的按钮：深色描边幽灵样式 */
 .app-header .ant-btn {
-  border-color: var(--sathub-border);
-  background: var(--sathub-surface);
-  color: #3e4d68;
+  border-color: #3f3f46;
+  background: transparent;
+  color: #e4e4e7;
   font-weight: 500;
 }
 
 .app-header .ant-btn:hover,
 .app-header .ant-btn:focus-visible {
-  border-color: var(--sathub-primary-hover);
-  color: var(--sathub-primary);
-  background: var(--sathub-primary-bg);
+  border-color: var(--sathub-text-strong);
+  color: var(--sathub-text-strong);
+  background: var(--sathub-surface-muted);
 }
 
-/* 用户胶囊 */
+/* 用户胶囊（黑壳上） */
 .user-chip {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 34px;
   padding: 0 10px 0 4px;
-  border: 1px solid var(--sathub-border);
+  border: 1px solid #3f3f46;
   border-radius: 17px;
-  background: var(--sathub-surface);
-  color: var(--sathub-text);
+  background: transparent;
+  color: #e4e4e7;
   cursor: pointer;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
 
 .user-chip:hover {
-  border-color: var(--sathub-primary-hover);
-  background: var(--sathub-primary-bg);
+  border-color: var(--sathub-text-strong);
+  background: var(--sathub-surface-muted);
 }
 
 .user-chip-name {
   max-width: 120px;
   overflow: hidden;
-  color: var(--sathub-text-strong);
+  color: #fafafa;
   font-size: 13px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -408,20 +421,22 @@ body {
 
 .user-chip-role {
   padding: 1px 7px;
-  border-radius: 10px;
-  background: var(--sathub-primary-bg);
-  color: var(--sathub-primary-deep);
+  border-radius: 9999px;
+  border: 1px solid var(--sathub-text-strong);
+  background: var(--sathub-surface);
+  color: var(--sathub-text-strong);
   font-size: 11px;
   font-weight: 600;
 }
 
 .user-chip-arrow {
-  color: var(--sathub-text-muted);
+  color: #a1a1aa;
   font-size: 10px;
 }
 
 .user-avatar {
-  background: var(--sathub-primary);
+  background: var(--sathub-text-strong);
+  color: #ffffff;
 }
 
 .app-content {
@@ -448,10 +463,10 @@ body {
 .global-alert {
   display: inline-block;
   padding: 6px 12px;
-  border: 1px solid #f5d7d7;
+  border: 1px solid #fecaca;
   border-radius: var(--sathub-radius);
-  background: #fdeeee;
-  color: #b04747;
+  background: #fef2f2;
+  color: #b91c1c;
   font-size: 12px;
 }
 
@@ -584,7 +599,7 @@ body {
 }
 
 .visual-metric-tone-success .visual-metric-body .ant-typography-title {
-  color: #0f7f70;
+  color: #15803d;
 }
 
 .visual-metric-tone-warning .visual-metric-icon {
@@ -593,7 +608,7 @@ body {
 }
 
 .visual-metric-tone-warning .visual-metric-body .ant-typography-title {
-  color: #b57718;
+  color: #a16207;
 }
 
 .visual-metric-tone-danger .visual-metric-icon {
@@ -602,7 +617,7 @@ body {
 }
 
 .visual-metric-tone-danger .visual-metric-body .ant-typography-title {
-  color: #b64848;
+  color: #b91c1c;
 }
 
 /* 区块标题条 */
@@ -794,8 +809,8 @@ body {
 .services-page .ant-table-thead > tr > th {
   height: 38px;
   border-bottom-color: var(--sathub-border-soft);
-  background: #f7f9fd;
-  color: #5d6b82;
+  background: var(--sathub-surface-muted);
+  color: var(--sathub-text-muted);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -805,13 +820,13 @@ body {
 .datasets-page .ant-table-tbody > tr > td,
 .services-page .ant-table-tbody > tr > td {
   height: 46px;
-  border-bottom-color: #eef2f8;
+  border-bottom-color: var(--sathub-border-soft);
 }
 
 .catalog-page .ant-table-tbody > tr:hover > td,
 .datasets-page .ant-table-tbody > tr:hover > td,
 .services-page .ant-table-tbody > tr:hover > td {
-  background: #f4f8ff !important;
+  background: rgba(254, 223, 132, 0.18) !important;
 }
 
 /* ---------- 轻量状态标签 ---------- */
@@ -826,39 +841,39 @@ body {
 }
 
 .status-tag-success {
-  background: var(--sathub-success-bg) !important;
+  background: #dcfce7 !important;
   border-color: transparent !important;
-  color: #0f7f70 !important;
+  color: #15803d !important;
 }
 
 .status-tag-processing {
-  background: var(--sathub-info-bg) !important;
+  background: #dbeafe !important;
   border-color: transparent !important;
-  color: #2c5fd8 !important;
+  color: #1d4ed8 !important;
 }
 
 .status-tag-info {
-  background: var(--sathub-info-bg) !important;
+  background: #e0f2fe !important;
   border-color: transparent !important;
-  color: #2c6fae !important;
+  color: #0369a1 !important;
 }
 
 .status-tag-warning {
-  background: var(--sathub-warning-bg) !important;
+  background: #fef3c7 !important;
   border-color: transparent !important;
-  color: #a86f14 !important;
+  color: #a16207 !important;
 }
 
 .status-tag-error {
-  background: var(--sathub-danger-bg) !important;
+  background: #fee2e2 !important;
   border-color: transparent !important;
-  color: #b64848 !important;
+  color: #b91c1c !important;
 }
 
 .status-tag-muted {
-  background: var(--sathub-muted-bg) !important;
+  background: #f4f4f5 !important;
   border-color: transparent !important;
-  color: #6b7890 !important;
+  color: #52525b !important;
 }
 
 /* ---------- 系统管理壳层 ---------- */
@@ -965,14 +980,14 @@ body {
 }
 
 .catalog-card:hover {
-  border-color: #a9c9ef;
+  border-color: #a1a1aa;
   box-shadow: var(--sathub-shadow-md);
   transform: translateY(-2px);
 }
 
 .catalog-card-selected {
-  border-color: var(--sathub-primary);
-  box-shadow: 0 0 0 1px var(--sathub-primary), var(--sathub-shadow-md);
+  border-color: var(--sathub-text-strong);
+  box-shadow: 0 0 0 1px var(--sathub-text-strong), var(--sathub-shadow-md);
 }
 
 .catalog-card-check {
@@ -985,8 +1000,9 @@ body {
   display: grid;
   place-items: center;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 2px 8px rgba(23, 32, 51, 0.16);
+  background: #09090b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
 }
 
 .catalog-card .ant-card-meta-title,
@@ -1013,7 +1029,7 @@ body {
   overflow: hidden;
   border: 1px solid var(--sathub-border-soft);
   border-radius: 5px;
-  background: #eef1f6;
+  background: var(--sathub-muted-bg);
 }
 
 .imagery-thumbnail .ant-image,
@@ -1037,7 +1053,7 @@ body {
   aspect-ratio: 16 / 10;
   border: 0;
   border-radius: 0;
-  background: #e8edf3;
+  background: var(--sathub-muted-bg);
 }
 
 .imagery-detail-content .imagery-thumbnail-large {
@@ -1052,7 +1068,7 @@ body {
   overflow: hidden;
   border: 1px solid var(--sathub-border-soft);
   border-radius: var(--sathub-radius-lg);
-  background: #eef1f6;
+  background: var(--sathub-muted-bg);
 }
 
 .dataset-map {
@@ -1123,6 +1139,7 @@ body {
 
 /* ---------- 批量操作浮条 ---------- */
 
+/* 批量操作浮条：SkyFi 式黑色浮块（白页上的黑色块，对应 ADD TO CART 条） */
 .selection-toolbar {
   position: fixed;
   z-index: 850;
@@ -1134,29 +1151,29 @@ body {
   justify-content: center;
   gap: 12px;
   padding: 8px 10px 8px 16px;
-  border: 1px solid rgba(214, 226, 244, 0.9);
+  border: 1px solid #09090b;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 4px 12px rgba(23, 43, 84, 0.08), 0 16px 40px rgba(23, 43, 84, 0.16);
-  color: #34435e;
+  background: rgba(9, 9, 11, 0.97);
+  box-shadow: var(--sathub-shadow-md);
+  color: #e4e4e7;
   transform: translateX(-50%);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px);
 }
 
 .selection-toolbar .ant-typography {
-  color: var(--sathub-text-strong);
+  color: #fafafa;
   font-weight: 600;
 }
 
 .selection-toolbar .ant-btn:not(.ant-btn-primary) {
-  border-color: #d8e1ef;
-  color: #50607a;
-  background: var(--sathub-surface);
+  border-color: #3f3f46;
+  color: #e4e4e7;
+  background: transparent;
 }
 
 .selection-toolbar .ant-btn:not(.ant-btn-primary):hover {
-  border-color: var(--sathub-primary-hover);
-  color: var(--sathub-primary);
+  border-color: var(--sathub-text-strong);
+  color: var(--sathub-text-strong);
 }
 
 /* ---------- 数据集详情 ---------- */
@@ -1214,25 +1231,25 @@ body {
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: #dfe5ea;
+  background: var(--sathub-canvas);
 }
 
 .map-page-with-detail > .map {
   width: calc(100% - 324px);
 }
 
-/* 地图浮层统一半透明白底 */
+/* 地图浮层：白色面板（对应 SkyFi 白色搜索面板/工具条），轻边框 + 柔和阴影 */
 .map-basemap-switcher,
 .map-search-panel,
 .map-layer-toolbar {
   position: absolute;
   z-index: 500;
-  border: 1px solid rgba(220, 228, 240, 0.96);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 14px rgba(23, 43, 84, 0.1), 0 12px 32px rgba(23, 43, 84, 0.08);
-  color: #34435e;
-  backdrop-filter: blur(6px);
+  border: 1px solid var(--sathub-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: rgba(9, 9, 11, 0.1) 0px 8px 24px 0px, rgba(9, 9, 11, 0.06) 0px 0px 1px 0px;
+  color: var(--sathub-text);
+  backdrop-filter: blur(10px);
 }
 
 .map-basemap-switcher {
@@ -1273,11 +1290,11 @@ body {
 .map-search-panel .ant-typography-secondary,
 .map-search-panel .viewport-note,
 .map-layer-toolbar .ant-typography-secondary {
-  color: #8190a6 !important;
+  color: #71717a !important;
 }
 
 .map-search-panel .ant-form-item-label > label {
-  color: #50607a !important;
+  color: var(--sathub-text-muted) !important;
   font-weight: 600;
   font-size: 12px;
 }
@@ -1287,7 +1304,7 @@ body {
 }
 
 .map-search-panel .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: var(--sathub-primary-deep);
+  color: var(--sathub-text-strong);
   font-weight: 600;
 }
 
@@ -1297,9 +1314,9 @@ body {
 .map-search-panel .ant-picker,
 .map-search-panel .ant-input-number,
 .map-search-panel .ant-segmented {
-  border-color: #d8e1ef !important;
-  background: var(--sathub-surface) !important;
-  color: #35445f !important;
+  border-color: var(--sathub-border) !important;
+  background: #ffffff !important;
+  color: var(--sathub-text) !important;
 }
 
 .map-search-panel .ant-input-affix-wrapper input,
@@ -1307,18 +1324,19 @@ body {
 .map-search-panel .ant-select-selection-item,
 .map-search-panel .ant-select-selection-search-input,
 .map-search-panel .ant-segmented-item {
-  color: #35445f !important;
+  color: var(--sathub-text) !important;
 }
 
 .map-search-panel .ant-input::placeholder,
 .map-search-panel .ant-select-selection-placeholder,
 .map-search-panel .ant-input-number-input::placeholder {
-  color: #9aa8bb !important;
+  color: #a1a1aa !important;
 }
 
+/* 检索按钮 = 黑色 CTA（SkyFi ADD TO CART 语言） */
 .map-search-panel .ant-input-search-button {
-  border-color: var(--sathub-primary) !important;
-  background: var(--sathub-primary) !important;
+  border-color: #09090b !important;
+  background: #09090b !important;
   color: #ffffff !important;
   font-weight: 600;
 }
@@ -1326,26 +1344,30 @@ body {
 .map-search-panel .ant-input-clear-icon,
 .map-search-panel .ant-select-arrow,
 .map-search-panel .ant-input-search-button .anticon {
-  color: #7890ba !important;
+  color: #a1a1aa !important;
+}
+
+.map-search-panel .ant-input-search-button .anticon {
+  color: #ffffff !important;
 }
 
 .map-search-panel .ant-segmented-item-selected {
   color: #ffffff !important;
-  background: var(--sathub-primary) !important;
+  background: #09090b !important;
 }
 
 .map-search-panel .ant-btn-default,
 .map-layer-toolbar .ant-btn-text {
-  border-color: #d8e1ef;
-  background: var(--sathub-surface);
-  color: #50607a;
+  border-color: var(--sathub-border);
+  background: #ffffff;
+  color: var(--sathub-text);
 }
 
 .map-search-panel .ant-btn-default:hover,
 .map-layer-toolbar .ant-btn-text:hover {
-  border-color: var(--sathub-primary-hover);
-  color: var(--sathub-primary);
-  background: var(--sathub-primary-bg);
+  border-color: var(--sathub-text-strong);
+  color: var(--sathub-text-strong);
+  background: #fafafa;
 }
 
 /* 紧凑筛选（地图左栏） */
@@ -1378,7 +1400,7 @@ body {
 .map-filter-section-title {
   padding-top: 4px;
   border-top: 1px solid var(--sathub-border-soft);
-  color: #34435e;
+  color: var(--sathub-text);
   font-size: 12px;
   font-weight: 600;
   line-height: 26px;
@@ -1490,12 +1512,12 @@ body {
 }
 
 .map-result:hover {
-  border-color: #b9cdef;
+  border-color: #a1a1aa;
 }
 
 .map-result-active {
-  border-color: #8faeff;
-  background: #f3f6ff;
+  border-color: var(--sathub-accent-deep);
+  background: rgba(254, 223, 132, 0.18);
 }
 
 .map-result button {
@@ -1520,13 +1542,13 @@ body {
 }
 
 .map-result-name {
-  color: #2f3e59;
+  color: var(--sathub-text);
   font-size: 12px;
   font-weight: 600;
 }
 
 .map-result-meta {
-  color: #8190a6;
+  color: var(--sathub-text-muted);
   font-size: 10.5px;
 }
 
@@ -1549,7 +1571,7 @@ body {
 }
 
 .map-layer-toolbar .ant-slider-track {
-  background: var(--sathub-primary);
+  background: var(--sathub-text-strong);
 }
 
 .map-layer-toolbar-name {
@@ -1576,7 +1598,7 @@ body {
   margin: 4px 0;
 }
 
-/* 详情浮层 */
+/* 详情浮层：白色面板 */
 .map-detail-panel {
   position: absolute;
   z-index: 500;
@@ -1587,11 +1609,11 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--sathub-border-soft);
-  border-radius: 10px;
+  border: 1px solid var(--sathub-border);
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: var(--sathub-shadow-md);
-  backdrop-filter: blur(6px);
+  box-shadow: rgba(9, 9, 11, 0.1) 0px 8px 24px 0px;
+  backdrop-filter: blur(10px);
 }
 
 .map-detail-header {
@@ -1678,7 +1700,7 @@ body {
   overflow: hidden;
   border: 1px solid var(--sathub-border-soft);
   border-radius: var(--sathub-radius-lg);
-  background: #eef1f6;
+  background: var(--sathub-muted-bg);
 }
 
 .service-preview-status {
@@ -1726,14 +1748,14 @@ body {
 }
 
 .import-drawer .ant-upload-drag {
-  border-color: #b9cce0;
-  background: #f8fafd;
+  border-color: var(--sathub-border);
+  background: var(--sathub-surface-muted);
   transition: border-color 180ms ease, background 180ms ease;
 }
 
 .import-drawer .ant-upload-drag:hover {
   border-color: var(--sathub-primary);
-  background: #f1f7ff;
+  background: rgba(254, 223, 132, 0.06);
 }
 
 .import-drawer .ant-upload-drag-icon .anticon {
@@ -2113,4 +2135,98 @@ body {
   .selection-toolbar .ant-btn .anticon + span {
     display: none;
   }
+}
+
+/* ---------- SkyFi 深色主题：Leaflet 控件与弹层 ---------- */
+
+.leaflet-container {
+  background: var(--sathub-canvas);
+  font-family: var(--sathub-font, Inter, "PingFang SC", "Microsoft YaHei", sans-serif);
+}
+
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  border-bottom-color: var(--sathub-border);
+  background: var(--sathub-surface);
+  color: var(--sathub-text);
+}
+
+.leaflet-bar a:hover {
+  background: var(--sathub-surface-muted);
+  color: var(--sathub-text-strong);
+}
+
+.leaflet-bar a:first-child {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.leaflet-bar a:last-child {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #52525b !important;
+  font-size: 10px;
+}
+
+.leaflet-control-attribution a {
+  color: var(--sathub-text-muted) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--sathub-surface);
+  color: var(--sathub-text);
+  box-shadow: var(--sathub-shadow-md);
+}
+
+.leaflet-popup-content-wrapper {
+  border: 1px solid var(--sathub-border);
+  border-radius: 8px;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--sathub-text-muted);
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: var(--sathub-primary);
+}
+
+/* 比例尺与缩放指示 */
+.leaflet-control-scale-line {
+  border-color: var(--sathub-text-muted);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--sathub-text-muted);
+}
+
+/* 绘制工具顶点 */
+.leaflet-draw-tooltip,
+.leaflet-draw-tooltip:before {
+  background: var(--sathub-surface);
+  border: 1px solid var(--sathub-border);
+  color: var(--sathub-text);
+}
+
+/* 主题色字体栈（供 leaflet-container 引用） */
+:root {
+  --sathub-font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* antd 补充：标签无边框（浅底色块风格） */
+.ant-tag {
+  border-color: transparent;
+}
+
+/* 主按钮：黑色实心 CTA（SkyFi ADD TO CART），加深字重 */
+.ant-btn-primary {
+  font-weight: 600;
+}
+
+/* 分页器激活页 */
+.ant-pagination-item-active {
+  border-color: var(--sathub-text-strong);
 }
