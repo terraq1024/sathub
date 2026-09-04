@@ -117,22 +117,15 @@ body {
 .brand-mark {
   display: inline-grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: var(--sathub-text-strong);
-  color: #ffffff;
-  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
 }
 
 .brand-mark-lg {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  background: var(--sathub-text-strong);
-  color: #ffffff;
-  font-size: 27px;
-  backdrop-filter: blur(4px);
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
 }
 
 /* antd v5 Typography.Title 只带 .ant-typography 类，双类选择器优先级高于单类，需 !important 覆盖 */
