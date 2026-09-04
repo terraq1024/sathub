@@ -139,8 +139,26 @@ export function UsersPanel({ currentUser }: { currentUser?: User }) {
           <Form.Item name="email" label="邮箱（可选）" rules={[{ type: 'email', message: '邮箱格式不正确' }]}>
             <Input placeholder="you@example.com" />
           </Form.Item>
-          <Form.Item name="password" label="初始密码" rules={[{ required: true, message: '请输入密码' }, { min: 8, message: '至少 8 位字符' }]}>
-            <Input.Password placeholder="至少 8 位，避免纯数字" />
+          <Form.Item
+            name="password"
+            label="初始密码"
+            extra="至少 8 位；不能是纯数字；避免常见密码（如 qw123456、12345678）"
+            rules={[
+              { required: true, message: '请输入密码' },
+              { min: 8, message: '至少 8 位字符' },
+              {
+                validator(_, value) {
+                  if (!value) return Promise.resolve();
+                  if (/^\d+$/.test(value)) return Promise.reject(new Error('密码不能为纯数字'));
+                  if (value.toLowerCase().includes('123456') || ['password', 'qwerty'].some((weak) => value.toLowerCase().includes(weak))) {
+                    return Promise.reject(new Error('密码包含过于常见的组合，请更换'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
+          >
+            <Input.Password placeholder="至少 8 位，字母 + 数字组合" />
           </Form.Item>
           <Form.Item name="is_staff" label="角色" initialValue={false}>
             <Select options={[{ value: false, label: '普通用户' }, { value: true, label: '管理员' }]} />
@@ -157,8 +175,23 @@ export function UsersPanel({ currentUser }: { currentUser?: User }) {
         destroyOnHidden
       >
         <Form form={resetForm} layout="vertical" requiredMark={false}>
-          <Form.Item name="new_password" label="新密码" rules={[{ required: true, message: '请输入新密码' }, { min: 8, message: '至少 8 位字符' }]}>
-            <Input.Password placeholder="至少 8 位，避免纯数字" />
+          <Form.Item
+            name="new_password"
+            label="新密码"
+            extra="至少 8 位；不能是纯数字；避免常见密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 8, message: '至少 8 位字符' },
+              {
+                validator(_, value) {
+                  if (!value) return Promise.resolve();
+                  if (/^\d+$/.test(value)) return Promise.reject(new Error('密码不能为纯数字'));
+                  return Promise.resolve();
+                }
+              }
+            ]}
+          >
+            <Input.Password placeholder="至少 8 位，字母 + 数字组合" />
           </Form.Item>
         </Form>
       </Modal>

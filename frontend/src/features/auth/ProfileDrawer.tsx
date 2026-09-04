@@ -63,6 +63,7 @@ export function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () =>
           <Form.Item
             name="new_password"
             label="新密码"
+            extra="至少 8 位；不能是纯数字；避免常见密码"
             rules={[{ required: true, message: '请输入新密码' }, { min: 8, message: '至少 8 位字符' }]}
             dependencies={['current_password']}
           >
