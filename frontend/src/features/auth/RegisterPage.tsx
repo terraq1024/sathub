@@ -1,4 +1,4 @@
-import { App, Button, Form, Input, Typography } from 'antd';
+import { Alert, App, Button, Form, Input, Typography } from 'antd';
 import { GlobalOutlined, LinkOutlined, UserOutlined } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { useRegister } from '../../api/hooks';
@@ -64,7 +64,15 @@ export function RegisterPage() {
             <Typography.Text type="secondary">创建后立即进入平台</Typography.Text>
           </div>
           <Form layout="vertical" requiredMark={false} onFinish={submit} size="large">
-            <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
+            <Form.Item
+              name="username"
+              label="用户名"
+              extra="3-150 个字符；不能与已有用户重复"
+              rules={[
+                { required: true, message: '请输入用户名' },
+                { min: 3, message: '至少 3 个字符' }
+              ]}
+            >
               <Input prefix={<UserOutlined />} autoComplete="username" placeholder="3-150 个字符" />
             </Form.Item>
             <Form.Item name="email" label="邮箱（可选）" rules={[{ type: 'email', message: '邮箱格式不正确' }]}>
@@ -73,12 +81,23 @@ export function RegisterPage() {
             <Form.Item
               name="password"
               label="密码"
+              extra="密码要求：至少 8 位；不能是纯数字；不能与用户名相似；避免使用常见密码（如 qw123456、12345678）"
               rules={[
                 { required: true, message: '请输入密码' },
-                { min: 8, message: '至少 8 位字符' }
+                { min: 8, message: '至少 8 位字符' },
+                {
+                  validator(_, value) {
+                    if (!value) return Promise.resolve();
+                    if (/^\d+$/.test(value)) return Promise.reject(new Error('密码不能为纯数字'));
+                    if (value.toLowerCase().includes('123456') || ['password', 'qwerty', 'abc123', '111111'].some((weak) => value.toLowerCase().includes(weak))) {
+                      return Promise.reject(new Error('密码包含过于常见的组合（如 123456/qwerty），请更换'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
               ]}
             >
-              <Input.Password autoComplete="new-password" placeholder="至少 8 位，避免纯数字" />
+              <Input.Password autoComplete="new-password" placeholder="至少 8 位，字母 + 数字组合" />
             </Form.Item>
             <Form.Item
               name="confirm"
