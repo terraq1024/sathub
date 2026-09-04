@@ -35,16 +35,22 @@ The open edition renders imagery inside its own map; it does not expose tile ser
 ## Quickstart (Docker Compose)
 
 ```bash
-docker compose up --build
-# backend:  http://localhost:8000  (Django API + admin)
-# frontend: http://localhost:8080
-```
-
-Then create a demo catalog inside the backend container:
-
-```bash
+# 1. Edit docker-compose.yml: set DJANGO_SECRET_KEY and
+#    SATHUB_ADMIN_PASSWORD (both default to change-me values).
+# 2. Build and start:
+docker compose up --build -d
+# frontend: http://localhost:8080   backend API: http://localhost:8000
+# 3. Log in with the admin account (SATHUB_ADMIN_USERNAME/PASSWORD),
+#    then optionally load the demo scenes:
 docker compose exec backend python manage.py seed_sample_data
 ```
+
+The stack runs three containers: the Django API (gunicorn), an
+ingestion worker (same image), and an nginx-served frontend. Data
+persists in the `sathub-data` / `sathub-duckdb` volumes. The first
+backend start runs migrations and creates the admin account defined by
+`SATHUB_ADMIN_USERNAME` / `SATHUB_ADMIN_PASSWORD` (only when no admin
+exists yet; regular users can then self-register at /register).
 
 ## Quickstart (manual)
 
