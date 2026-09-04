@@ -358,7 +358,7 @@ body {
 
 .top-menu .ant-menu-item-selected {
   color: #09090b !important;
-  background: var(--sathub-surface-muted) !important;
+  background: var(--sathub-accent) !important;
   border-radius: 6px !important;
   font-weight: 600;
 }
@@ -398,8 +398,8 @@ body {
 }
 
 .user-chip:hover {
-  border-color: var(--sathub-text-strong);
-  background: var(--sathub-surface-muted);
+  border-color: var(--sathub-text-secondary);
+  background: var(--sathub-surface-hover);
 }
 
 .user-chip-name {
