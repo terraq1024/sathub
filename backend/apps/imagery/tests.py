@@ -383,6 +383,69 @@ class VisibilityTests(ImageryApiTestBase):
         )
 
 
+class AssetVisibilityTests(ImageryApiTestBase):
+    """Private imagery must not be downloadable or readable by ID alone."""
+
+    def _make_private(self, imagery, asset_file=None):
+        from apps.imagery.models import ImageryAsset, ImageryRecord
+
+        ImageryRecord.objects.filter(pk=imagery.pk).update(visibility="private")
+        asset_path = Path(self.temporary_directory.name) / f"{imagery.pk}-data.dat"
+        asset_path.write_bytes(b"scene-data")
+        ImageryAsset.objects.update_or_create(
+            imagery=imagery,
+            role="data",
+            defaults=dict(name="data.dat", path=str(asset_path), access_mode="managed", media_type="application/octet-stream", size_bytes=10),
+        )
+        return asset_path
+
+    def test_private_asset_download_blocked_for_others(self):
+        from apps.imagery.services import sync_imagery_projection
+
+        imagery = self.create_imagery("locked-asset")
+        self._make_private(imagery)
+        sync_imagery_projection(imagery.pk)
+
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get(f"/api/imagery/{imagery.pk}/assets/data").status_code, 404)
+        self.client.force_authenticate(self.owner)
+        response = self.client.get(f"/api/imagery/{imagery.pk}/assets/data")
+        self.assertEqual(response.status_code, 200)
+        # Consume the streaming body so Windows releases the file handle
+        # before TemporaryDirectory cleanup.
+        for chunk in response.streaming_content:
+            pass
+
+    def test_private_stac_item_blocked_for_others(self):
+        from apps.imagery.services import sync_imagery_projection
+
+        imagery = self.create_imagery("locked-stac")
+        self._make_private(imagery)
+        sync_imagery_projection(imagery.pk)
+
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get(f"/api/stac/collections/sathub-imagery/items/{imagery.stac_id}").status_code, 404)
+        self.client.force_authenticate(self.owner)
+        self.assertEqual(self.client.get(f"/api/stac/collections/sathub-imagery/items/{imagery.stac_id}").status_code, 200)
+
+
+class DatasetVisibilityTests(ImageryApiTestBase):
+    def test_private_datasets_hidden_from_others(self):
+        from apps.imagery.models import ImageryDataset
+
+        mine = ImageryDataset.objects.create(name="mine", created_by=self.owner, visibility="private")
+        shared = ImageryDataset.objects.create(name="shared", created_by=self.owner, visibility="public")
+
+        self.client.force_authenticate(self.other)
+        names = {row["name"] for row in self.client.get("/api/imagery/datasets").data["results"]}
+        self.assertNotIn("mine", names)
+        self.assertIn("shared", names)
+        self.assertEqual(self.client.get(f"/api/imagery/datasets/{mine.pk}").status_code, 404)
+
+        self.client.force_authenticate(self.owner)
+        self.assertEqual(self.client.get(f"/api/imagery/datasets/{mine.pk}").status_code, 200)
+
+
 class ImageryDatasetApiTests(ImageryApiTestBase):
     def setUp(self):
         super().setUp()

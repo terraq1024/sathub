@@ -1,4 +1,4 @@
-import { Alert, App, Button, Checkbox, Form, Input, Typography } from 'antd';
+import { Alert, App, Button, Form, Input, Typography } from 'antd';
 import { DatabaseOutlined, SearchOutlined, FolderOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { useLogin } from '../../api/hooks';
@@ -78,8 +78,9 @@ export function LoginPage() {
               <Input.Password prefix={<LockOutlined />} autoComplete="current-password" placeholder="请输入密码" />
             </Form.Item>
             <div className="login-panel-options">
-              <Checkbox>记住我</Checkbox>
-              <Typography.Link className="login-panel-forgot">忘记密码？</Typography.Link>
+              <Typography.Text type="secondary" className="login-panel-forgot">
+                忘记密码请联系管理员在系统设置中重置
+              </Typography.Text>
             </div>
             {login.isError ? <Alert type="error" showIcon message={normalizeError(login.error)} /> : null}
             <Button type="primary" htmlType="submit" loading={login.isPending} block>登 录</Button>

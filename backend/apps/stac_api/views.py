@@ -48,7 +48,9 @@ class ItemView(BaseView):
         record = ImageryRecord.objects.filter(is_archived=False).prefetch_related("assets", "project_tags").filter(stac_id=item_id).first()
         if record is None:
             record = ImageryRecord.objects.filter(is_archived=False).prefetch_related("assets", "project_tags").filter(scene_key=item_id).first()
-        if record is None:
+        # search_records filters visibility; the single-item route must too,
+        # or private scenes would leak by direct id.
+        if record is None or not record.can_view(request.user):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         return Response(item_for_record(request, record))
 
