@@ -32,59 +32,85 @@ This repository is the open edition. The following capabilities are part of the 
 
 The open edition renders imagery inside its own map; it does not expose tile service endpoints.
 
-## Quickstart (Docker Compose)
+## Quickstart (plain — recommended)
 
-```bash
-# 1. Copy the env template and set your secrets:
-cp .env.example .env      # then edit DJANGO_SECRET_KEY / SATHUB_ADMIN_PASSWORD
-# 2. Build and start:
-docker compose up --build -d
-# frontend: http://localhost:8080   backend API: http://localhost:8000
-# 3. Log in with the admin account (SATHUB_ADMIN_USERNAME/PASSWORD),
-#    then optionally load the demo scenes:
-docker compose exec backend python manage.py seed_sample_data
-```
+Three moving parts only: a Python backend, one background worker, and a
+static frontend build. No containers required.
 
-Every value in `docker-compose.yml` can be overridden from `.env`
-(`SATHUB_ADMIN_USERNAME`, `SATHUB_ADMIN_PASSWORD`, `SATHUB_BACKEND_PORT`,
-`SATHUB_FRONTEND_PORT`, `DJANGO_ALLOWED_HOSTS`, ...). For production,
-put the stack behind your own TLS-terminating reverse proxy and set
-`DJANGO_DEBUG=false` (the default in the compose file).
-
-The stack runs three containers: the Django API (gunicorn), an
-ingestion worker (same image), and an nginx-served frontend. Data
-persists in the `sathub-data` / `sathub-duckdb` volumes. The first
-backend start runs migrations and creates the admin account defined by
-`SATHUB_ADMIN_USERNAME` / `SATHUB_ADMIN_PASSWORD` (only when no admin
-exists yet; regular users can then self-register at /register).
-
-## Quickstart (manual)
-
-Backend (Python 3.11+):
+**1. Backend** (Python 3.11+):
 
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py bootstrap_admin                    # creates admin from SATHUB_ADMIN_USERNAME/PASSWORD (see below)
 python manage.py seed_sample_data                   # optional: 3 demo scenes + demo account
-python manage.py run_ingestion_worker               # separate terminal
-python manage.py runserver 127.0.0.1:8000           # dev only
 ```
 
-For a manual production setup, serve the backend with gunicorn
-(`pip install gunicorn && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3`)
-behind a reverse proxy that also serves `frontend/dist` as static files.
+**2. Ingestion worker** (separate terminal):
 
-Frontend (Node 18+):
+```bash
+source ../backend/.venv/bin/activate                # Windows: ..\backend\.venv\Scripts\activate
+python manage.py run_ingestion_worker
+```
+
+**3. Frontend** (Node 18+):
 
 ```bash
 cd frontend
 npm ci
-npm run dev -- --host 127.0.0.1
+npm run dev -- --host 127.0.0.1      # development, proxies /api to :8000
+# or for serving real users:
+npm run build                        # outputs frontend/dist — serve it with nginx/caddy
 ```
 
-Log in with the seeded demo account (`demo` / `demo1234`), open the map, and the three sample scenes are already there with previews. Basemaps: Tianditu vector/imagery and Esri World Imagery, switchable from the map corner.
+**Log in**: with the seeded demo account (`demo` / `demo1234`) or the
+bootstrap admin, then register more users at `/register`. Basemaps:
+Tianditu vector/imagery and Esri World Imagery, switchable from the map
+corner.
+
+**Environment variables** (see `.env.example` and the table in
+[backend/README.md](backend/README.md)): `DJANGO_SECRET_KEY`,
+`DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `SATHUB_DATA_ROOT`,
+`SATHUB_DUCKDB_PATH`, `SATHUB_ADMIN_USERNAME` / `SATHUB_ADMIN_PASSWORD`
+(first-admin bootstrap), and the optional `SATHUB_WARP_PYTHON` (see
+below).
+
+**Production notes**:
+
+- Serve the backend with gunicorn
+  (`pip install gunicorn && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3`)
+  behind nginx/Caddy, which also serves `frontend/dist` as static files
+  and proxies `/api` + `/admin` to the backend.
+- Run `run_ingestion_worker` under a process manager (systemd unit,
+  pm2, NSSM on Windows) — it must stay alive for imports to process.
+- `rasterio` ships prebuilt wheels for Linux/macOS/Windows; if your host
+  has a broken GDAL/expat stack (seen on some Windows conda setups),
+  create a small isolated venv with just rasterio and point
+  `SATHUB_WARP_PYTHON` at its interpreter — the app probes it and uses
+  it only for warping rotated rasters into north-up previews. Without a
+  healthy rasterio anywhere, previews degrade gracefully to unwarped.
+
+## Alternative: Docker Compose
+
+Prefer containers? The repo ships a three-container stack (gunicorn
+backend, ingestion worker, nginx frontend):
+
+```bash
+cp .env.example .env      # set DJANGO_SECRET_KEY / SATHUB_ADMIN_PASSWORD
+docker compose up --build -d
+# frontend: http://localhost:8080   backend API: http://localhost:8000
+```
+
+Every value in `docker-compose.yml` can be overridden from `.env`
+(`SATHUB_ADMIN_USERNAME`, `SATHUB_ADMIN_PASSWORD`, `SATHUB_BACKEND_PORT`,
+`SATHUB_FRONTEND_PORT`, `DJANGO_ALLOWED_HOSTS`, ...). The first backend
+start runs migrations and creates the admin account; regular users can
+then self-register. Data persists in the `sathub-data` /
+`sathub-duckdb` volumes. Put your own TLS-terminating reverse proxy in
+front for production.
+
 
 ## Sample data
 

@@ -34,22 +34,40 @@
 
 开源版只在自己的地图内渲染影像，不对外提供瓦片服务端点。
 
-## 快速开始
+## 快速开始（朴素部署 · 推荐）
+
+只有三个部分：Python 后端、一个后台 worker、一个静态前端构建。无需容器。
+
+**1. 后端**（Python 3.11+）：
 
 ```bash
-# Docker Compose
-docker compose up --build
-# 后端 http://localhost:8000 ，前端 http://localhost:8080
-docker compose exec backend python manage.py seed_sample_data
-
-# 或手动部署
 cd backend && pip install -r requirements.txt
 python manage.py migrate
-python manage.py seed_sample_data
-python manage.py run_ingestion_worker   # 独立终端
-python manage.py runserver 127.0.0.1:8000
+python manage.py bootstrap_admin          # 从 SATHUB_ADMIN_* 环境变量创建管理员
+python manage.py seed_sample_data         # 可选：3 景演示数据 + demo 账号
+```
 
-cd frontend && npm ci && npm run dev -- --host 127.0.0.1
+**2. 接入 worker**（独立终端）：
+
+```bash
+python manage.py run_ingestion_worker
+```
+
+**3. 前端**（Node 18+）：
+
+```bash
+cd frontend && npm ci && npm run dev -- --host 127.0.0.1   # 开发，/api 代理到 :8000
+# 或面向真实用户：npm run build 后用 nginx/caddy 托管 dist
+```
+
+**登录**：demo 账号（`demo` / `demo1234`）或 bootstrap 管理员，更多用户在 `/register` 自助注册。环境变量、生产注意事项（gunicorn、进程管理器、`SATHUB_WARP_PYTHON` 矫正解释器）详见 [README.md](README.md)。
+
+## 备选：Docker Compose
+
+```bash
+docker compose up --build -d
+# 前端 http://localhost:8080 ，后端 http://localhost:8000
+docker compose exec backend python manage.py seed_sample_data
 ```
 
 使用演示账号登录（`demo` / `demo1234`），打开地图即可看到三景示例影像与预览图。底图内置天地图（电子/影像）与 Esri World Imagery，可在地图右下角切换。
