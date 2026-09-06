@@ -43,7 +43,7 @@
 ```bash
 cd backend && pip install -r requirements.txt
 python manage.py migrate
-python manage.py bootstrap_admin          # 从 SATHUB_ADMIN_* 环境变量创建管理员
+python manage.py bootstrap_admin          # 创建首个管理员（交互式；或设 SATHUB_ADMIN_USERNAME/PASSWORD 跳过询问）
 python manage.py seed_sample_data         # 可选：3 景演示数据 + demo 账号
 ```
 
@@ -60,7 +60,7 @@ cd frontend && npm ci && npm run dev -- --host 127.0.0.1   # 开发，/api 代�
 # 或面向真实用户：npm run build 后用 nginx/caddy 托管 dist
 ```
 
-**登录**：demo 账号（`demo` / `demo1234`）或 bootstrap 管理员，更多用户在 `/register` 自助注册。环境变量、生产注意事项（gunicorn、进程管理器、`SATHUB_WARP_PYTHON` 矫正解释器）详见 [README.md](README.md)。
+**登录**：用刚创建的 bootstrap 管理员或 demo 账号（`demo` / `demo1234`）登录，更多用户在 `/register` 自助注册。管理员账号是进入用户管理与系统设置的唯一入口，因此 migrate 后必须先执行 bootstrap_admin。环境变量、生产注意事项（gunicorn、进程管理器、`SATHUB_WARP_PYTHON` 矫正解释器）详见 [README.md](README.md)。
 
 ## 备选：Docker Compose
 

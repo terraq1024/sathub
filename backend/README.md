@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ```bash
 python manage.py migrate
-python manage.py createsuperuser        # or: python manage.py seed_sample_data
+python manage.py bootstrap_admin        # creates the first admin (interactive; or set SATHUB_ADMIN_USERNAME/PASSWORD)
 python manage.py run_ingestion_worker   # separate terminal
 python manage.py runserver 127.0.0.1:8000
 ```

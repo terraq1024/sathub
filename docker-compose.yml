@@ -5,7 +5,8 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me-in-production}
       DJANGO_DEBUG: "false"
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-backend,localhost,127.0.0.1}
-      # First admin account (only created when no admin exists yet):
+      # First admin account: created on first start when no admin exists.
+      # If unset, the worker container prompts interactively instead.
       SATHUB_ADMIN_USERNAME: ${SATHUB_ADMIN_USERNAME:-admin}
       SATHUB_ADMIN_PASSWORD: ${SATHUB_ADMIN_PASSWORD:-change-me-too}
     volumes:

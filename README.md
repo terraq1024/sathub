@@ -44,7 +44,7 @@ cd backend
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py bootstrap_admin                    # creates admin from SATHUB_ADMIN_USERNAME/PASSWORD (see below)
+python manage.py bootstrap_admin                    # creates your first admin (interactive; or set SATHUB_ADMIN_USERNAME/PASSWORD to skip the prompt)
 python manage.py seed_sample_data                   # optional: 3 demo scenes + demo account
 ```
 
@@ -65,8 +65,11 @@ npm run dev -- --host 127.0.0.1      # development, proxies /api to :8000
 npm run build                        # outputs frontend/dist — serve it with nginx/caddy
 ```
 
-**Log in**: with the seeded demo account (`demo` / `demo1234`) or the
-bootstrap admin, then register more users at `/register`. Basemaps:
+**Log in**: with the bootstrap admin you just created (or the seeded
+`demo` / `demo1234`), then register more users at `/register`. The
+admin account is required to reach user administration and system
+settings — without it the platform has no management access, which is
+why `bootstrap_admin` prompts for it right after migrate. Basemaps:
 Tianditu vector/imagery and Esri World Imagery, switchable from the map
 corner.
 
