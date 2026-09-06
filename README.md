@@ -35,8 +35,8 @@ The open edition renders imagery inside its own map; it does not expose tile ser
 ## Quickstart (Docker Compose)
 
 ```bash
-# 1. Edit docker-compose.yml: set DJANGO_SECRET_KEY and
-#    SATHUB_ADMIN_PASSWORD (both default to change-me values).
+# 1. Copy the env template and set your secrets:
+cp .env.example .env      # then edit DJANGO_SECRET_KEY / SATHUB_ADMIN_PASSWORD
 # 2. Build and start:
 docker compose up --build -d
 # frontend: http://localhost:8080   backend API: http://localhost:8000
@@ -44,6 +44,12 @@ docker compose up --build -d
 #    then optionally load the demo scenes:
 docker compose exec backend python manage.py seed_sample_data
 ```
+
+Every value in `docker-compose.yml` can be overridden from `.env`
+(`SATHUB_ADMIN_USERNAME`, `SATHUB_ADMIN_PASSWORD`, `SATHUB_BACKEND_PORT`,
+`SATHUB_FRONTEND_PORT`, `DJANGO_ALLOWED_HOSTS`, ...). For production,
+put the stack behind your own TLS-terminating reverse proxy and set
+`DJANGO_DEBUG=false` (the default in the compose file).
 
 The stack runs three containers: the Django API (gunicorn), an
 ingestion worker (same image), and an nginx-served frontend. Data
@@ -63,8 +69,12 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed_sample_data                   # optional: 3 demo scenes + demo account
 python manage.py run_ingestion_worker               # separate terminal
-python manage.py runserver 127.0.0.1:8000
+python manage.py runserver 127.0.0.1:8000           # dev only
 ```
+
+For a manual production setup, serve the backend with gunicorn
+(`pip install gunicorn && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3`)
+behind a reverse proxy that also serves `frontend/dist` as static files.
 
 Frontend (Node 18+):
 

@@ -2,38 +2,41 @@ services:
   backend:
     build: ./backend
     environment:
-      DJANGO_SECRET_KEY: change-me-in-production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me-in-production}
       DJANGO_DEBUG: "false"
-      DJANGO_ALLOWED_HOSTS: backend,localhost,127.0.0.1
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-backend,localhost,127.0.0.1}
       # First admin account (only created when no admin exists yet):
-      SATHUB_ADMIN_USERNAME: admin
-      SATHUB_ADMIN_PASSWORD: change-me-too
+      SATHUB_ADMIN_USERNAME: ${SATHUB_ADMIN_USERNAME:-admin}
+      SATHUB_ADMIN_PASSWORD: ${SATHUB_ADMIN_PASSWORD:-change-me-too}
     volumes:
       - sathub-data:/app/data
       - sathub-duckdb:/app/duckdb
     ports:
-      - "8000:8000"
+      - "${SATHUB_BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
 
   backend-worker:
     build: ./backend
     # Wait for migrations before the worker starts claiming jobs.
     command: ["sh", "-c", "python manage.py migrate && python manage.py bootstrap_admin && exec python manage.py run_ingestion_worker"]
     environment:
-      DJANGO_SECRET_KEY: change-me-in-production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me-in-production}
       DJANGO_DEBUG: "false"
-      DJANGO_ALLOWED_HOSTS: backend,localhost,127.0.0.1
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-backend,localhost,127.0.0.1}
     volumes:
       - sathub-data:/app/data
       - sathub-duckdb:/app/duckdb
     depends_on:
       - backend
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
     ports:
-      - "8080:80"
+      - "${SATHUB_FRONTEND_PORT:-8080}:80"
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
   sathub-data:
