@@ -81,6 +81,16 @@ def _governance_image_ids(filters):
     return list(ids[:10000])
 
 
+def _visible_datasets_for(user, queryset=None):
+    """Datasets visible to a user: public ones plus their own (staff see all)."""
+    base = queryset if queryset is not None else _dataset_queryset()
+    if user.is_staff or user.is_superuser:
+        return base
+    from django.db.models import Q
+
+    return base.filter(Q(visibility=ImageryDataset.VISIBILITY_PUBLIC) | Q(created_by=user))
+
+
 def _dataset_queryset():
     member_queryset = (
         ImageryDatasetMember.objects.select_related("imagery", "added_by")
@@ -457,6 +467,12 @@ class ImageryAssetView(APIView):
             )
         except ImageryAsset.DoesNotExist:
             return Response({"detail": "Asset not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Visibility gate: private imagery only serves its owner and staff.
+        # Without this, anyone who learns an image_id could download the
+        # primary data of private scenes.
+        imagery = asset.imagery
+        if imagery.visibility == ImageryRecord.VISIBILITY_PRIVATE and not imagery.can_view(request.user):
+            return Response({"detail": "Asset not found."}, status=status.HTTP_404_NOT_FOUND)
         try:
             path = resolve_asset_path(asset)
         except (ValueError, OSError):
@@ -523,7 +539,7 @@ class ImageryMapView(APIView):
 class ImageryDatasetListCreateView(APIView):
     def get(self, request):
         include_archived = _is_true(request.query_params.get("include_archived"))
-        queryset = _dataset_queryset()
+        queryset = _visible_datasets_for(request.user)
         if include_archived:
             if not request.user.is_staff:
                 queryset = queryset.filter(Q(status=ImageryDataset.STATUS_ACTIVE) | Q(created_by=request.user))
@@ -563,10 +579,9 @@ class ImageryDatasetListCreateView(APIView):
 
 class ImageryDatasetDetailView(APIView):
     def get(self, request, dataset_id):
-        dataset = _visible_dataset_or_404(
-            request,
-            dataset_id,
-            include_archived=_is_true(request.query_params.get("include_archived")),
+        dataset = get_object_or_404(
+            _visible_datasets_for(request.user),
+            pk=dataset_id,
         )
         return Response(ImageryDatasetDetailSerializer(dataset, context={"request": request}).data)
 

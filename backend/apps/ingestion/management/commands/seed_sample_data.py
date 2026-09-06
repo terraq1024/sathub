@@ -31,10 +31,16 @@ class Command(BaseCommand):
             return
 
         user_model = get_user_model()
+        # Regular user on purpose: the seeded credentials are public in the
+        # README, so it must never carry staff powers on a public deployment.
         user, created = user_model.objects.get_or_create(
             username=options["username"],
-            defaults={"is_staff": True},
+            defaults={"is_staff": False},
         )
+        if created is False and user.is_staff:
+            self.stdout.write(self.style.WARNING(
+                f"seed: user '{user.username}' already exists and is staff; leaving permissions untouched."
+            ))
         if created:
             user.set_password(options["password"])
             user.save(update_fields=["password"])
