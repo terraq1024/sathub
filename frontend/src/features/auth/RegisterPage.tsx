@@ -1,9 +1,10 @@
 import { Alert, App, Button, Form, Input, Typography } from 'antd';
-import { GlobalOutlined, LinkOutlined, UserOutlined } from '@ant-design/icons';
+import { LinkOutlined, UserOutlined } from '@ant-design/icons';
 import { api } from '../../api/client';
 import { useRegister } from '../../api/hooks';
 import { normalizeError } from '../imagery/utils';
-import { SatHubMark } from '../../components/SatHubMark';
+import { SatHubMarkColor } from '../../components/SatHubMarkColor';
+import { LoginOrbitDecor } from '../../components/LoginOrbitDecor';
 
 const brandPoints = [
   { title: '开放注册', text: '注册即可开始汇聚你的卫星影像' },
@@ -32,15 +33,18 @@ export function RegisterPage() {
   return (
     <div className="login-screen">
       <div className="login-brand-pane">
+        <LoginOrbitDecor />
         <div className="login-brand-top">
-          <span className="brand-mark brand-mark-lg"><SatHubMark size={27} /></span>
+          <span className="login-brand-logo"><img src="/logo.png" alt="SatHub" style={{ width: 56, height: 61, objectFit: 'contain', display: 'block' }} /></span>
           <div>
             <Typography.Title level={3} className="login-brand-title">SatHub</Typography.Title>
             <Typography.Text className="login-brand-subtitle">卫星影像管理平台</Typography.Text>
           </div>
         </div>
         <div className="login-brand-hero">
-          <Typography.Title level={2} className="login-brand-headline">从一块硬盘，到整个团队的影像库</Typography.Title>
+          <Typography.Title level={2} className="login-brand-headline">
+            从一块硬盘，到整个团队的<em>影像库</em>
+          </Typography.Title>
           <Typography.Paragraph className="login-brand-desc">
             注册一个账号，把散落的卫星影像接入统一目录，检索、预览与组织你的数据资产。
           </Typography.Paragraph>
@@ -57,14 +61,16 @@ export function RegisterPage() {
           ))}
         </ul>
         <div className="login-brand-footer">
-          <GlobalOutlined />
           <Typography.Text>SatHub · 开源影像平台</Typography.Text>
         </div>
       </div>
       <div className="login-form-pane">
         <section className="login-panel">
+          <div className="login-panel-brand">
+            <span className="login-panel-logo"><img src="/logo.png" alt="SatHub" style={{ width: 46, height: 50, objectFit: 'contain', display: 'block' }} /></span>
+            <Typography.Title level={3} className="login-panel-name">SatHub</Typography.Title>
+          </div>
           <div className="login-panel-head">
-            <Typography.Title level={4}>注册账号</Typography.Title>
             <Typography.Text type="secondary">创建后立即进入平台</Typography.Text>
           </div>
           <Form layout="vertical" requiredMark={false} onFinish={submit} size="large">
