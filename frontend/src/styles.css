@@ -12,6 +12,12 @@
 :root {
   --sathub-canvas: #fafafa;
   --sathub-surface: #ffffff;
+  --sathub-shell-bg: #09090b;
+  --sathub-shell-surface: #101014;
+  --sathub-shell-hover: #23252a;
+  --sathub-shell-border: #3f3f46;
+  --sathub-shell-text: #f4f4f5;
+  --sathub-shell-text-muted: #a1a1aa;
   --sathub-surface-muted: #f4f4f5;
   --sathub-border: #e4e4e7;
   --sathub-border-soft: #f0f0f2;
@@ -80,26 +86,24 @@ body {
   grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
 }
 
-/* 左侧品牌叙事栏：黑色壳层（SkyFi 黑框），金黄点缀 */
+/* 左侧品牌叙事栏：浅蓝灰底 + 轨道装饰（按设计稿） */
 .login-brand-pane {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 28px;
-  padding: 48px 56px;
+  padding: 56px 64px 44px;
   overflow: hidden;
-  background: #09090b;
-  color: #e4e4e7;
+  background: linear-gradient(155deg, #f0f3fa 0%, #e9edf7 55%, #eef1f9 100%);
+  color: #1a2438;
 }
 
-.login-brand-pane::before {
-  content: "";
+.login-orbit-decor {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(720px 420px at 85% -10%, rgba(254, 223, 132, 0.08), transparent 62%),
-    radial-gradient(560px 380px at -8% 108%, rgba(254, 223, 132, 0.05), transparent 60%);
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
@@ -108,46 +112,37 @@ body {
   z-index: 1;
 }
 
+/* 装饰层必须绝对定位铺满；选择器优先级需高于上面的 .login-brand-pane > * */
+.login-brand-pane > svg.login-orbit-decor {
+  position: absolute !important;
+  inset: 0;
+  z-index: 0;
+}
+
 .login-brand-top {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
-.brand-mark {
-  display: inline-grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  overflow: hidden;
+.login-brand-logo {
+  display: inline-flex;
 }
 
-.brand-mark-lg {
-  width: 64px;
-  height: 64px;
-  overflow: hidden;
-}
-
-/* antd v5 Typography.Title 只带 .ant-typography 类，双类选择器优先级高于单类，需 !important 覆盖 */
 .login-brand-title {
-  margin: 0;
-  color: #fafafa !important;
-  font-size: 24px;
-  line-height: 1.15;
-}
-
-.login-brand-pane .ant-typography {
-  color: #a1a1aa;
-}
-
-.login-brand-pane .login-brand-title,
-.login-brand-pane .login-brand-headline {
-  color: #fafafa !important;
+  margin: 0 !important;
+  color: #10182b !important;
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
 }
 
 .login-brand-subtitle {
-  color: #a1a1aa !important;
-  font-size: 13px;
+  display: block;
+  margin-top: 4px;
+  color: #5f6b85 !important;
+  font-size: 14px;
 }
 
 .login-brand-hero {
@@ -156,25 +151,31 @@ body {
 }
 
 .login-brand-headline {
-  max-width: 13em;
-  margin: 0 0 14px;
-  color: #fafafa !important;
-  font-size: 34px;
-  line-height: 1.3;
+  max-width: 12em;
+  margin: 0 0 18px !important;
+  color: #10182b !important;
+  font-size: 42px !important;
+  font-weight: 800 !important;
+  line-height: 1.35;
   letter-spacing: 0.01em;
 }
 
+.login-brand-headline em {
+  font-style: normal;
+  color: #4a7df6;
+}
+
 .login-brand-desc {
-  max-width: 34em;
-  margin: 0;
-  color: #a1a1aa !important;
-  font-size: 14px;
-  line-height: 1.8;
+  max-width: 30em;
+  margin: 0 !important;
+  color: #5f6b85 !important;
+  font-size: 15px;
+  line-height: 1.9;
 }
 
 .login-brand-points {
   display: grid;
-  gap: 16px;
+  gap: 20px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -183,32 +184,34 @@ body {
 .login-brand-points li {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
 }
 
 .login-brand-point-icon {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  margin-top: 1px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  font-size: 16px;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #e2e8f4;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #4a7df6;
+  font-size: 20px;
+  box-shadow: 0 6px 18px rgba(74, 125, 246, 0.1);
 }
 
 .login-brand-point-title {
   display: block;
-  color: #fafafa;
-  font-size: 14px;
+  color: #1a2438 !important;
+  font-size: 15px;
 }
 
 .login-brand-point-text {
   display: block;
-  color: #a1a1aa;
-  font-size: 12.5px;
+  margin-top: 3px;
+  color: #6b7690 !important;
+  font-size: 13px;
   line-height: 1.6;
 }
 
@@ -216,12 +219,12 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #a1a1aa;
-  font-size: 12px;
+  color: #8a94ab;
+  font-size: 13px;
 }
 
 .login-brand-footer .ant-typography {
-  color: #a1a1aa;
+  color: #8a94ab;
 }
 
 /* 右侧登录卡 */
@@ -229,20 +232,37 @@ body {
   display: grid;
   place-items: center;
   padding: 32px;
-  background: var(--sathub-canvas);
+  background: #f7f8fb;
 }
 
 .login-panel {
-  width: min(380px, 100%);
-  padding: 34px 32px 28px;
-  border: 1px solid var(--sathub-border-soft);
-  border-radius: 12px;
-  background: var(--sathub-surface);
-  box-shadow: var(--sathub-shadow-md);
+  width: min(460px, 100%);
+  padding: 40px 44px 32px;
+  border: 1px solid #eceff5;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(24, 39, 75, 0.08);
+}
+
+.login-panel-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.login-panel-name {
+  margin: 0 !important;
+  color: #10182b !important;
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
 }
 
 .login-panel-head {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  text-align: center;
 }
 
 .login-panel-head .ant-typography-title {
@@ -251,13 +271,31 @@ body {
   font-size: 22px;
 }
 
+.login-panel-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -4px 0 16px;
+}
+
+.login-panel-forgot {
+  font-size: 13px;
+}
+
 .login-panel .ant-btn-primary {
-  height: 40px;
+  height: 46px;
   margin-top: 4px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
 }
 
-/* ---------- 应用壳层 ---------- */
+.login-panel-switch {
+  margin-top: 16px;
+  text-align: center;
+}
+
+
 
 .app-layout {
   width: 100%;
