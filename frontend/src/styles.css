@@ -427,23 +427,23 @@ body {
   gap: 8px;
   height: 34px;
   padding: 0 10px 0 4px;
-  border: 1px solid #3f3f46;
-  border-radius: 17px;
-  background: transparent;
-  color: #e4e4e7;
+  border: 1px solid var(--sathub-shell-border);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sathub-shell-text);
   cursor: pointer;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
 
 .user-chip:hover {
-  border-color: var(--sathub-text-secondary);
-  background: var(--sathub-surface-hover);
+  border-color: var(--sathub-shell-text-muted);
+  background: var(--sathub-shell-hover);
 }
 
 .user-chip-name {
   max-width: 120px;
   overflow: hidden;
-  color: #fafafa;
+  color: var(--sathub-shell-text);
   font-size: 13px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -453,21 +453,22 @@ body {
 .user-chip-role {
   padding: 1px 7px;
   border-radius: 9999px;
-  border: 1px solid var(--sathub-border);
-  background: var(--sathub-surface-muted);
-  color: var(--sathub-text-secondary);
+  border: 1px solid var(--sathub-shell-border);
+  background: var(--sathub-shell-hover);
+  color: var(--sathub-shell-text-muted);
   font-size: 11px;
   font-weight: 510;
 }
 
 .user-chip-arrow {
-  color: #a1a1aa;
+  color: var(--sathub-shell-text-muted);
   font-size: 10px;
 }
 
 .user-avatar {
-  background: var(--sathub-text-strong);
-  color: #ffffff;
+  background: var(--sathub-shell-hover);
+  border: 1px solid rgba(254, 223, 132, 0.4);
+  color: var(--sathub-accent);
 }
 
 .app-content {
